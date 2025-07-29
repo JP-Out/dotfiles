@@ -1,0 +1,6 @@
+# Nunca versionar arquivos de credenciais
+*.key
+*.pem
+*.env
+*.gpg
+
