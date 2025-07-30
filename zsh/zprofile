@@ -3,3 +3,6 @@ if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
     exec Hyprland
 fi
 
+# Inicia keyring (Gnome) em sessão Wayland
+eval $(/usr/bin/gnome-keyring-daemon --start --components=secrets)
+export $(/usr/bin/gnome-keyring-daemon --start)
