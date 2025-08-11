@@ -1,0 +1,37 @@
+/* ───────────── Emoji Grid Theme ───────────── */
+@import "~/.config/rofi/config.rasi"
+
+window {
+    location: center;
+    width: 600px;        
+    height: 400px;       
+    border-radius: 10px;
+}
+
+mainbox {
+    spacing: 10px;
+    children: [inputbar, listview];
+}
+
+listview {
+    columns: 8;
+    lines: 5;
+    spacing: 10px;
+    cycle: false;
+    dynamic: false;   /* IMPORTANTE */
+}
+
+element {
+    padding: 0px 3px 0px -55px;
+    orientation: horizontal;
+}
+
+element-icon {
+    size: 48px;
+    expand: false;
+}
+
+element-text {
+    /* esconde o texto do emoji, mostra só o símbolo */
+    font: "Noto Color Emoji 28";
+}
