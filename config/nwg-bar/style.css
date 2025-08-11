@@ -1,0 +1,74 @@
+@define-color base #1e1e2e;
+@define-color crust #11111b;
+@define-color text #dcd7ba;
+@define-color surface0 #313244;
+@define-color blue #89b4fa;
+@define-color mauve #cba6f7;
+@define-color peach #fab387;
+
+/* Fundo principal da janela */
+window {
+    background-image: url("/home/shaka/.dotfiles/config/assets/vegapunk-robot-rounded.png");
+    background-size: Contain;
+    background-position: center;
+    background-color: transparent; /* 🔹 Remove fundo cinza */
+}
+
+/* Outer bar container */
+#outer-box {
+    min-height: 0px;
+    margin-bottom: -6px;
+    margin-top: -122px;
+    margin-left: -1px;
+    margin-right: -0.8px;
+    background-color: transparent;
+    /*
+    border-radius: 10px;               
+    border: 2px solid rgba(137, 180, 250, 0.3);
+    */
+    padding-top: 400px;
+}
+
+/* Inner bar container */
+#inner-box {
+    background-color: @crust; /* Fundo interno */
+    border-radius: 12px;                     /* Bordas internas */
+    border: 1px solid rgba(203, 166, 247, 0.2); /* Mauve */
+    padding: 8px;
+    margin: 40px;    
+}
+
+
+button image {
+    min-width: 6px;   /* Ajuste o tamanho desejado */
+    min-height: 40px;
+}
+
+/* Botões e imagens */
+button, image {
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: @text;
+}
+
+/* Botões */
+button {
+    padding: 8px 8px;
+    margin: 4px;
+    border-radius: 8px;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 24px;
+}
+
+
+/* Hover suave */
+button:hover {
+    background-color: rgba(203, 166, 247, 0.15); /* Mauve */
+}
+
+/* Ativo / clicado */
+button:active {
+    background-color: rgba(137, 180, 250, 0.2); /* Azul */
+    color: @blue;
+}

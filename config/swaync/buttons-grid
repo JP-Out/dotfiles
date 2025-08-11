@@ -1,0 +1,22 @@
+    "buttons-grid": {
+      "actions": [
+        {
+          "label": "󰖩",
+          "command": "iwgtk"
+        },
+        {
+          "label": "󰍬",
+          "command": "pactl set-source-mute @DEFAULT_SOURCE@ toggle",
+          "type": "toggle"
+        },
+        {
+          "label": "󰂯",
+          "command": "blueman-manager"
+        },
+        {
+          "class": "rec-btn",
+          "label": "",
+          "command": "kooha"
+        }
+      ]
+    }

@@ -1,28 +1,33 @@
+# ███████╗███████╗██╗  ██╗
+# ╚══███╔╝██╔════╝██║  ██║
+#   ███╔╝ ███████╗███████║
+#  ███╔╝  ╚════██║██╔══██║
+# ███████╗███████║██║  ██║
+# ╚══════╝╚══════╝╚═╝  ╚═╝
+
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+export PATH="$HOME/.config/rofi/scripts:$PATH" # Rofi Scripts testes
+
+# source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+# source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 export VISUAL=nvim
 export EDITOR=nvim
+export TERMINAL=kitty
+export LANG=pt_BR.UTF-8
+export LC_TIME=pt_BR.UTF-8
+export COLORTERM=truecolor
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
-
-# Cria script executável direto no ~/bin
-mkbin() {
-    local script="$HOME/bin/$1"
-    echo "#!/usr/bin/env bash" > "$script"
-    chmod +x "$script"
-    echo -e "\033[1;32m[✔] Script criado:\033[0m $script"
-    echo -e "\033[1;34m[ℹ] Permissão:\033[0m executável (+x) com shebang '#!/usr/bin/env bash'"
-}
+# ZSH_THEME="robbyrussell"
+ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -84,9 +89,10 @@ mkbin() {
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
-
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 source $ZSH/oh-my-zsh.sh
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
 
 # User configuration
 
@@ -116,3 +122,13 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+alias rice-mode="~/bin/rice-mode.sh"
+
+
+# Mostrar fastfetch só depois do prompt REAL (sem disparar o aviso do p10k)
+# Fastfetch só depois do prompt, chamando o binário corretamente
+if command -v fastfetch >/dev/null 2>&1; then
+  autoload -Uz add-zsh-hook
+  _ff_once() { fastfetch; add-zsh-hook -d precmd _ff_once }
+  add-zsh-hook precmd _ff_once
+fi

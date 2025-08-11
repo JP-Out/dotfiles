@@ -1,0 +1,11 @@
+[Unit]
+Description=Conectar dispositivo Bluetooth no login
+After=graphical.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/bin/conectar_bluetooth.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
