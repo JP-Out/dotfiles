@@ -1,0 +1,175 @@
+/*
+███████╗ █████╗ ███████╗████████╗███████╗███████╗████████╗ ██████╗██╗  ██╗
+██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝██╔════╝██║  ██║
+█████╗  ███████║███████╗   ██║   █████╗  █████╗     ██║   ██║     ███████║
+██╔══╝  ██╔══██║╚════██║   ██║   ██╔══╝  ██╔══╝     ██║   ██║     ██╔══██║
+██║     ██║  ██║███████║   ██║   ██║     ███████╗   ██║   ╚██████╗██║  ██║
+╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚══════╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
+*/
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        "source": "$HOME/.dotfiles/config/fastfetch/logo/arch-logo.txt",
+        "padding": {
+            "top": 2
+        },
+        "color": {
+          "1": "#89b4fa"
+        }
+    },
+    "display": {
+        "separator": " -> "
+    },
+    "modules": [
+        {
+          "type": "custom",
+          "format": "┌───────────────────────────────────────────┐",
+          "outputColor": "#89b4fa"
+        },
+        {
+          "type": "title",
+          "format": "   \u001b[38;2;211;124;240m {1}\u001b[0m\u001b[38;2;240;124;124m{7}{2}\u001b[0m    \u001b[38;2;249;199;125m {3}\u001b[0m                 "
+        },
+        {
+          "type": "custom",
+          "format": "└───────────────────────────────────────────┘",
+          "outputColor": "#89b4fa"
+        },
+        {
+          "type": "custom",
+          "format": "            \u001b[38;2;243;139;168m«»\u001b[38;2;242;163;140m«»\u001b[38;2;249;199;125m«»\u001b[38;2;230;232;126m«»\u001b[38;2;181;232;144m«»\u001b[38;2;148;226;213m«»\u001b[38;2;137;220;235m«»\u001b[38;2;116;199;236m«»\u001b[38;2;164;185;239m«»\u001b[38;2;203;166;247m«»\u001b[0m                   "
+        },                          
+        {
+            "type": "custom",
+            "format": "┌───────────────────────────────────────────┐",
+            "outputColor": "#89b4fa"
+        },
+        {
+            "type": "os",
+            "key": "{icon} OS",
+            "format": "\u001b[38;2;137;220;235m󰣇 {3}\u001b[0m \u001b[38;2;249;199;125m{8} {10}\u001b[0m[\u001b[38;2;180;190;254m{12}\u001b[0m]",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "kernel",
+            "key": "│ ├󰌽",
+            "format": "\u001b[38;2;137;220;235mKernel\u001b[0m (Ver.: {2})",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "packages",
+            "key": "│ ├󰏖",
+            "format": "\u001b[38;2;137;220;235m󰮯 {2}\u001b[0m  \u001b[38;2;249;199;125m󰏗 {44}\u001b[0m ",
+            "keyColor": "yellow"
+        },
+        {
+          "type": "shell",
+          "key": "│ └",
+          "format": "{6} (Ver.: {4})",
+          "keyColor": "yellow"
+        },
+        {
+            "type": "wm",
+            "key": " WM",
+            "format": "\u001b[38;2;4;194;222m{2} (Ver.: {5})\u001b[0m ",
+            "keyColor": "blue"
+        },// rgb(4,194,222)
+        {
+            "type": "lm",
+            "key": "│ ├󰧨",
+            "keyColor": "blue"
+        },
+        {
+            "type": "wmtheme",
+            "key": "│ ├󰉼",
+            "keyColor": "blue"
+        },
+        {
+            "type": "icons",
+            "key": "│ ├󰀻",
+            "format": "\u001b[38;2;124;143;162m{1~0,13}\u001b[0m",
+            "keyColor": "blue"
+        },
+        {
+          "type": "terminal",
+          "key": "│ ├",
+          "format": "\u001b[38;2;122;78;51m{5}\u001b[0m (Ver.: {6})",
+          "keyColor": "blue"
+        },
+        {
+            "type": "wallpaper",
+            "key": "│ └󰸉",
+            "keyColor": "blue"
+        },
+        {
+            "type": "host",
+            "key": "󰌢 PC",
+            "keyColor": "green"
+        },
+        {
+          "type": "cpu",
+          "key": "│ ├",
+          "format": "\u001b[38;2;239;136;30mAMD Ryzen\u001b[0m 5 3600",
+          "keyColor": "green",
+        },
+        {
+            "type": "gpu",
+            "key": "│ ├󰘚",
+            "format": "\u001b[38;2;222;0;48mAMD Radeon\u001b[0m RX 5700 XT",
+            "keyColor": "green"
+        },
+        {
+          "type": "disk",
+          "key": "│ ├",
+          "folders": ["/", "/home"],
+          "format": "\u001b[38;2;166;227;161m{20}\u001b[0m: \u001b[38;2;249;199;125m{1~0,-4}\u001b[0m/\u001b[38;2;137;220;235m{2~0,-4}\u001b[0m GiB ({3})",
+          "keyColor": "green"
+        },
+        {
+          "type": "memory",
+          "key": "│ ├",
+          "format": "\u001b[38;2;166;227;161mRAM\u001b[0m: \u001b[38;2;249;199;125m{1~0,-4}\u001b[0m/\u001b[38;2;137;220;235m{2~0,-4}\u001b[0m GiB ({3})",
+          "keyColor": "green"
+        },
+        // {
+        //     "type": "swap",
+        //     "key": "│ ├󰓡",
+        //     "keyColor": "green"
+        // },
+        {
+          "type": "uptime",
+          "key": "│ ├󰅐",
+          "keyColor": "green",
+          "format": "\u001b[38;2;166;227;161mSessão\u001b[0m: {hours} Horas"
+        },
+        {
+            "type": "display",
+            "key": "│ └󰍹",
+            "format": "\u001b[38;2;166;227;161m{name}\u001b[0m - \u001b[38;2;116;199;236m{width}x{height}\u001b[0m@\u001b[38;2;242;163;140m{refresh-rate}Hz\u001b[0m",
+            "keyColor": "green"
+        },
+        {
+            "type": "sound",
+            "key": " SND",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "player",
+            "key": "│ ├󰥠",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "media",
+            "key": "│ └󰝚",
+            "format": "{2:-25}",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "custom",
+            "format": "└───────────────────────────────────────────┘",
+            "outputColor": "#89b4fa"
+        },
+        "break",
+        "colors"
+    ]
+}

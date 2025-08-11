@@ -1,0 +1,5 @@
+[Unit]
+Description=Troca automática de wallpapers no Hyprland
+
+[Service]
+ExecStart=%h/.config/scripts/hyprpaper_change.sh

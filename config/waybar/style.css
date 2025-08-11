@@ -1,19 +1,51 @@
+@define-color base #1e1e2e;
+@define-color mantle #181825;
+@define-color crust #11111b;
+
+@define-color text #dcd7ba;
+@define-color subtext0 #a6adc8;
+@define-color subtext1 #bac2de;
+
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color surface2 #585b70;
+
+@define-color overlay0 #6c7086;
+@define-color overlay1 #7f849c;
+@define-color overlay2 #9399b2;
+
+@define-color blue #89b4fa;
+@define-color lavender #b4befe;
+@define-color sapphire #74c7ec;
+@define-color sky #89dceb;
+@define-color teal #94e2d5;
+@define-color green #a6e3a1;
+@define-color yellow #f9e2af;
+@define-color peach #fab387;
+@define-color maroon #eba0ac;
+@define-color red #f38ba8;
+@define-color mauve #cba6f7;
+@define-color pink #f5c2e7;
+@define-color flamingo #f2cdcd;
+@define-color rosewater #f5e0dc;
+
 * {
-    /* `otf-font-awesome` is required to be installed for icons */
-    font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
-    font-size: 13px;
+  font-family: "JetBrainsMono NFM SemiBold", monospace;
+  font-weight: 600; /* SemiBold */
+  font-size: 16px;
+  border-radius: 10px;
 }
 
+
 window#waybar {
-    background-color: rgba(43, 48, 59, 0.5);
-    border-bottom: 3px solid rgba(100, 114, 125, 0.5);
-    color: #ffffff;
-    transition-property: background-color;
-    transition-duration: .5s;
+  background-color: transparent;
+  color: @sapphire;
+  transition-property: background-color;
+  transition-duration: 0.5s;
 }
 
 window#waybar.hidden {
-    opacity: 0.2;
+  opacity: 0.2;
 }
 
 /*
@@ -26,56 +58,89 @@ window#waybar.solo {
 */
 
 window#waybar.termite {
-    background-color: #3F3F3F;
+  background-color: #3f3f3f;
 }
 
 window#waybar.chromium {
-    background-color: #000000;
-    border: none;
+  background-color: #000000;
+  border: none;
 }
 
 button {
-    /* Use box-shadow instead of border so the text isn't offset */
-    box-shadow: inset 0 -3px transparent;
-    /* Avoid rounded borders under each button name */
-    border: none;
-    border-radius: 0;
+  /* Use box-shadow instead of border so the text isn't offset */
+  box-shadow: inset 0 -3px transparent;
+  /* Avoid rounded borders under each button name */
+  border: none;
+  border-radius: 0;
 }
 
 /* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
-button:hover {
-    background: inherit;
-    box-shadow: inset 0 -3px #ffffff;
+
+#workspaces button:hover {
+  color: @blue;
+  box-shadow: inherit;
+  text-shadow: inherit;
+  background: @crust;
+  border: @crust;
+  border-radius: 10px;
+  background-color: rgba(17, 17, 27, 0.60);
 }
 
-/* you can set a style on hover for any module like this */
-#pulseaudio:hover {
-    background-color: #a37800;
+#workspaces button.empty {
+  color: #44475a
 }
 
 #workspaces button {
-    padding: 0 5px;
-    background-color: transparent;
-    color: #ffffff;
+  padding: 0 5px;
+  color: @surface2;
+  margin: 4px 0 4px 0;
+  transition: color 200ms ease-in-out;
 }
 
-#workspaces button:hover {
-    background: rgba(0, 0, 0, 0.2);
+#workspaces button label {
+    font-size: 18px; /* tamanho normal */
+    color: @text;
 }
 
-#workspaces button.focused {
-    background-color: #64727D;
-    box-shadow: inset 0 -3px #ffffff;
+#workspaces button.active label,
+#workspaces button.urgent label,
+#workspaces button.focused label {
+    font-size: 24px;
+}
+
+/* Animação de piscar */
+@keyframes urgent-blink {
+    0%   { color: #f38ba8; }  /* vermelho */
+    50%  { color: #ffffff; }  /* branco */
+    100% { color: #f38ba8; }  /* volta ao vermelho */
+}
+
+/* Aplica animação no workspace urgente */
+#workspaces button.urgent label {
+    font-size: 28px;         /* mantém grande */
+    animation: urgent-blink 0.6s ease-in-out 2; /* pisca 2x */
+}
+
+#workspaces button:nth-child(1) label {
+    animation: urgent-blink 0.6s ease-in-out 2;
+}
+
+#workspaces button.selected {
+  color: @blue;
+}
+
+#workspaces button.active {
+  color: @mauve;
 }
 
 #workspaces button.urgent {
-    background-color: #eb4d4b;
+  color: @red;
 }
 
-#mode {
-    background-color: #64727D;
-    box-shadow: inset 0 -3px #ffffff;
-}
+
+/* #image {
+  margin-right: 5px;
+} */
 
 #clock,
 #battery,
@@ -84,244 +149,261 @@ button:hover {
 #disk,
 #temperature,
 #backlight,
-#network,
-#pulseaudio,
+#network.wifi,
+#network.disconnected,
 #wireplumber,
-#custom-media,
+#custom-pacman,
+#custom-power,
 #tray,
 #mode,
 #idle_inhibitor,
 #scratchpad,
-#power-profiles-daemon,
 #mpd {
-    padding: 0 10px;
-    color: #ffffff;
+  padding: 0 6px;
+  color: @text;
+  border-radius: 15px;
+  /* margin: 5px 0; */
+}
+
+#power-profiles-daemon.balanced,
+#power-profiles-daemon.power-saver {
+  margin-right: 7px;
+}
+
+#pulseaudio {
+  padding: 0 10px;
+  color: @text;
+  border-radius: 15px;
+}
+
+
+#pulseaudio {
+  font-size: 32px;
+  color: @mauve;
+}
+
+#pulseaudio.muted {
+  color: @surface2;
 }
 
 #window,
 #workspaces {
-    margin: 0 4px;
+  margin: 0 0 0 -1px;
 }
 
-/* If workspaces is the leftmost module, omit left margin */
-.modules-left > widget:first-child > #workspaces {
-    margin-left: 0;
+/* If workspaces is the leftmost module, reduce left margin */
+.modules-left>widget:first-child>#workspaces {
+  margin-left: 2px;
 }
 
-/* If workspaces is the rightmost module, omit right margin */
-.modules-right > widget:last-child > #workspaces {
-    margin-right: 0;
+#cpu,
+#memory,
+#temperature,
+#custom-gpu,
+#networ,
+#custom-net_speed {
+  font-size: 15px;
+  background-color: rgba(26, 26, 41, 0.60);
+  /* background-color: #1a1a29; */
+  color: #FF8535;
+  border-radius: 10px;
+  padding: 0px 10px;
+  margin: 5px 0px;
 }
 
-#clock {
-    background-color: #64727D;
+/* 2) tira gordura do ícone/label dentro da cápsula */
+#cpu>label, #cpu image,
+#memory label, #memory image,
+#temperature label, #temperature image,
+#custom-gpu label, #custom-gpu image {
+  padding: 0;
+  margin: -10px;
 }
 
-#battery {
-    background-color: #ffffff;
-    color: #000000;
+/* 3) permite encolher ao mínimo necessário do texto */
+#cpu, #memory, #temperature, #custom-gpu { min-width: 0; min-height: 0; }
+
+#temperature {
+  /* margin-right: 10px; */
 }
 
-#battery.charging, #battery.plugged {
-    color: #ffffff;
-    background-color: #26A65B;
+
+#custom-net_speed {
+  /* background-color: #1a1a29; */
+  color: #6fcf97;
+  border-radius: 10px;
+  /* padding: 0 8px;
+  margin: 5px 0; */
 }
 
-@keyframes blink {
-    to {
-        background-color: #ffffff;
-        color: #000000;
-    }
+#custom-clock {
+  color: @text;
 }
 
-/* Using steps() instead of linear as a timing function to limit cpu usage */
-#battery.critical:not(.charging) {
-    background-color: #f53c3c;
-    color: #ffffff;
-    animation-name: blink;
-    animation-duration: 0.5s;
-    animation-timing-function: steps(12);
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-}
-
-#power-profiles-daemon {
-    padding-right: 15px;
-}
-
-#power-profiles-daemon.performance {
-    background-color: #f53c3c;
-    color: #ffffff;
-}
-
-#power-profiles-daemon.balanced {
-    background-color: #2980b9;
-    color: #ffffff;
-}
-
-#power-profiles-daemon.power-saver {
-    background-color: #2ecc71;
-    color: #000000;
-}
-
-label:focus {
-    background-color: #000000;
-}
-
-#cpu {
-    background-color: #2ecc71;
-    color: #000000;
-}
-
-#memory {
-    background-color: #9b59b6;
-}
-
-#disk {
-    background-color: #964B00;
-}
-
-#backlight {
-    background-color: #90b1b1;
+#custom-pacman {
+  color: @peach;
 }
 
 #network {
-    background-color: #2980b9;
+  font-size: 31px;
+  color: @blue;
 }
 
 #network.disconnected {
-    background-color: #f53c3c;
+  color: @surface2;
+  margin-right: -5px;
+  margin-left: -8px;
 }
 
-#pulseaudio {
-    background-color: #f1c40f;
-    color: #000000;
+#network.ethernet {
+  margin-right: 4px;
+  margin-left: 0px;
 }
 
-#pulseaudio.muted {
-    background-color: #90b1b1;
-    color: #2a5c45;
+#battery {
+  color: @green;
 }
 
-#wireplumber {
-    background-color: #fff0f5;
-    color: #000000;
+#battery.warning:not(.charging) {
+  color: @red;
 }
 
-#wireplumber.muted {
-    background-color: #f53c3c;
+#custom-power {
+  font-size: 25px;
+  color: @maroon;
 }
 
-#custom-media {
-    background-color: #66cc99;
-    color: #2a5c45;
-    min-width: 100px;
+#bluetooth {
+  /* margin-right: 10px; */
+  font-size: 19px;
+  color: #a6adc8; /* cinza claro */
 }
 
-#custom-media.custom-spotify {
-    background-color: #66cc99;
+/* Conectado */
+#bluetooth.connected {
+  font-size: 25px;
+  color: #8be9fd; /* azul */
 }
 
-#custom-media.custom-vlc {
-    background-color: #ffa000;
+/* Desconectado mas adaptador ligado */
+#bluetooth.disconnected {
+  color: #f1fa8c; /* amarelo */
 }
 
-#temperature {
-    background-color: #f0932b;
+/* Adaptador desligado */
+#bluetooth.off,
+#bluetooth.disabled {
+  font-size: 23px;
+  color: #ff5555; /* vermelho */
 }
 
-#temperature.critical {
-    background-color: #eb4d4b;
+
+#keyboard-state>label {
+  padding: 0 5px;
 }
 
-#tray {
-    background-color: #2980b9;
-}
-
-#tray > .passive {
-    -gtk-icon-effect: dim;
-}
-
-#tray > .needs-attention {
-    -gtk-icon-effect: highlight;
-    background-color: #eb4d4b;
-}
-
-#idle_inhibitor {
-    background-color: #2d3436;
-}
-
-#idle_inhibitor.activated {
-    background-color: #ecf0f1;
-    color: #2d3436;
-}
-
-#mpd {
-    background-color: #66cc99;
-    color: #2a5c45;
-}
-
-#mpd.disconnected {
-    background-color: #f53c3c;
-}
-
-#mpd.stopped {
-    background-color: #90b1b1;
-}
-
-#mpd.paused {
-    background-color: #51a37a;
-}
-
-#language {
-    background: #00b093;
-    color: #740864;
-    padding: 0 5px;
-    margin: 0 5px;
-    min-width: 16px;
-}
-
-#keyboard-state {
-    background: #97e1ad;
-    color: #000000;
-    padding: 0 0px;
-    margin: 0 5px;
-    min-width: 16px;
-}
-
-#keyboard-state > label {
-    padding: 0 5px;
-}
-
-#keyboard-state > label.locked {
-    background: rgba(0, 0, 0, 0.2);
+#keyboard-state>label.locked {
+  background: rgba(0, 0, 0, 0.2);
 }
 
 #scratchpad {
-    background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 #scratchpad.empty {
-	background-color: transparent;
+  background-color: transparent;
 }
 
-#privacy {
-    padding: 0;
+.modules-left {
+  /* background-color: @crust; */
+  background-color: rgba(17, 17, 27, 0.80);
+  padding-right: 10px;
+  margin: 5px 0 0 10px;
+  border: solid #1a1a29 2px;
 }
 
-#privacy-item {
-    padding: 0 5px;
-    color: white;
+.modules-center {
+  /* background-color: @crust; */
+  background-color: rgba(17, 17, 27, 0.80);
+  padding: 0px 5px;         /* antes devia estar maior; deixe 0–6px conforme gosto */
+  margin-top: 5px;
+  border: solid #1a1a29 2px;
+  /* border: solid cyan 2px; */
 }
 
-#privacy-item.screenshare {
-    background-color: #cf5700;
+.modules-right {
+  /* background-color: @crust; */
+  background-color: rgba(17, 17, 27, 0.80);
+  padding: 0 10px;
+  margin: 5px 10px 0 0;
+  border: solid #1a1a29 2px;
 }
 
-#privacy-item.audio-in {
-    background-color: #1ca000;
+window#waybar .modules-left,
+window#waybar .modules-center,
+window#waybar .modules-right {
+  margin-top: 2px;
+  margin-bottom: 0;
+  border-width: 2.6px;
 }
 
-#privacy-item.audio-out {
-    background-color: #0069d4;
+#custom-spotify {
+  color: #6fcf97;
 }
+
+/* Estado normal */
+#custom-notification {
+  font-size: 22px;
+  color: #ffffff; /* branco */
+  padding-right: 10px;
+}
+
+/* Quando houver notificação */
+#custom-notification.notification {
+  color: #ff5555; /* vermelho */
+}
+
+/* Modo Não Perturbe */
+#custom-notification.dnd-none,
+#custom-notification.dnd-notification {
+  color: #ffb86c; /* laranja */
+}
+
+/* Inibido */
+#custom-notification.inhibited-none,
+#custom-notification.inhibited-notification {
+  color: #8be9fd; /* azul claro */
+}
+
+
+#custom-uptime {
+  color: @text;
+}
+
+#custom-clipboard {
+  font-size: 22px;
+  color: #ffffff; /* branco */
+  padding-right: 10px;
+}
+
+#custom-separator_tray,
+#custom-separator_clock,
+#custom-separator_uptime {
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+}
+
+#custom-separator_tray,
+#custom-separator_clock {
+  margin-left: -4px;
+}
+
+#custom-separator_uptime {
+  padding-right: 0px;
+  margin-right: -3px; /* Ajuste mínimo */
+  min-width: 2px;     /* Garante que não corte */
+}
+
+/* vim: ft=sass */
+
+/* Fundo da barra levemente transparente */
