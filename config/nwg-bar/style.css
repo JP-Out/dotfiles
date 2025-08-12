@@ -8,7 +8,7 @@
 
 /* Fundo principal da janela */
 window {
-    background-image: url("/home/shaka/.dotfiles/config/assets/vegapunk-robot-rounded.png");
+    background-image: url("/home/shaka/.config/assets-dotfiles/vegapunk-robot-rounded.png");
     background-size: Contain;
     background-position: center;
     background-color: transparent; /* 🔹 Remove fundo cinza */

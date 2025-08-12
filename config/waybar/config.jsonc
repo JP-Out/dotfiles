@@ -243,7 +243,7 @@
     "format": "-({work_H}h {work_M}m)",
     "interval": 60,
     "icon": true,
-    "avatar": "/home/shaka/.config/assets/avatar-rounded.png"
+    "avatar": "/home/shaka/.config/assets-dotfiles-dotfiles/avatar-rounded.png"
   },
   "clock": {
     "format": "{:%H:%M}",
