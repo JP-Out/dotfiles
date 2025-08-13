@@ -4,3 +4,6 @@
 *.env
 *.gpg
 
+# Ignorar o Hyprpaper (Adiciona comentarios novos a cada troca de wallpaper)
+config/hypr/hyprpaper.conf
+
