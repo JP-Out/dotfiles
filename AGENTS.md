@@ -40,7 +40,8 @@ A automação deve abranger desde a instalação de utilitários como **CopyQ**,
   ```
   install/00-deps.sh
   ```
-
+- Sempre priorize pacotes dos repositorios oficiais (pacman).
+- Se um pacote possui versão wayland deve sempre ser priorizado (exceto se a versão não for oficial).
 - Faça o script sabendo que ele será incorporado futuramente em um script principal.
 
 ---
