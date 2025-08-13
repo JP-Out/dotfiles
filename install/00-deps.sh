@@ -15,11 +15,31 @@ PACMAN_PACKAGES=(
   git
   curl
   wget
+  bc
+  bluez
+  bluez-utils       # bluetoothctl
+  copyq
+  gawk              # awk
+  iproute2          # ip
+  kitty
+  libnotify         # notify-send
+  networkmanager    # inclui nmtui
+  nwg-bar
+  pamixer
+  pipewire-pulse    # provê pactl
+  playerctl
+  procps-ng         # pgrep
+  radeontop
+  sed
+  waybar
+  hyprland
+  papirus-icon-theme      # opcional: ícones Papirus
+  ttf-jetbrains-mono-nerd # opcional: Nerd Font
   # adicione aqui: 'unzip' 'jq' 'jq' ...
 )
 
 AUR_PACKAGES=(
-  # Aqui vão pacotes AUR, remover comentario quando adicionar pacotes
+  swaync
 )
 
 # Helper AUR padrão
