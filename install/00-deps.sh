@@ -126,9 +126,8 @@ bootstrap_yay() {
 aur_install() {
   [[ ${#@} -gt 0 ]] || return 0
 
-  if ! have "$AUR_HELPER"; then
+  check_aur
     log "AUR helper '$AUR_HELPER' não encontrado. Iniciando bootstrap..."
-    bootstrap_yay
   fi
 
   local pkgs_to_install=()
@@ -191,15 +190,23 @@ main() {
   # Garante pacotes base (inclui git, base-devel, curl, wget, etc.)
   pacman_install "${PACMAN_PACKAGES[@]}"
 
-  # Garante AUR helper (yay) e instala pacotes do AUR
+  # Garante AUR configurado e instala pacotes do AUR
   if [[ ${#AUR_PACKAGES[@]} -gt 0 || "$AUR_HELPER" == "yay" ]]; then
-    if ! have "$AUR_HELPER"; then
-      bootstrap_yay
-    fi
+    check_aur
     aur_install "${AUR_PACKAGES[@]}"
+  fi
   fi
 
   log "✔ Dependências concluídas."
 }
 
 main "$@"
+
+#------------------------------- Verificação AUR -----------------------------#
+check_aur() {
+  check_aur
+    log "Nenhum AUR helper detectado. Preparando bootstrap de $AUR_HELPER…"
+  else
+    log "✓ AUR helper '$AUR_HELPER' já configurado"
+  fi
+}
