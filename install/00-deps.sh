@@ -19,23 +19,30 @@ PACMAN_PACKAGES=(
   bluez
   bluez-utils       # bluetoothctl
   copyq
+  fastfetch
   gawk              # awk
+  grim
+  hyprland
+  hyprlock
+  hyprpaper
   iproute2          # ip
   kitty
   libnotify         # notify-send
+  neovim
   networkmanager    # inclui nmtui
   nwg-bar
+  rofi
   pamixer
   pipewire-pulse    # provê pactl
   playerctl
   procps-ng         # pgrep
   radeontop
   sed
+  slurp
   waybar
-  hyprland
+  zsh
   papirus-icon-theme      # opcional: ícones Papirus
   ttf-jetbrains-mono-nerd # opcional: Nerd Font
-  # adicione aqui: 'unzip' 'jq' 'jq' ...
 )
 
 AUR_PACKAGES=(
