@@ -43,7 +43,6 @@ PACMAN_PACKAGES=(
   zsh
   papirus-icon-theme      # opcional: ícones Papirus
   ttf-jetbrains-mono-nerd # opcional: Nerd Font
-  # adicione aqui: 'unzip' 'jq' 'jq' ...
 )
 
 AUR_PACKAGES=(

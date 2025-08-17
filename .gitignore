@@ -3,7 +3,7 @@
 *.pem
 *.env
 *.gpg
-
+*.bak
 # Ignorar o Hyprpaper (Adiciona comentarios novos a cada troca de wallpaper)
 config/hypr/hyprpaper.conf
 
