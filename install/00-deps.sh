@@ -19,20 +19,28 @@ PACMAN_PACKAGES=(
   bluez
   bluez-utils       # bluetoothctl
   copyq
+  fastfetch
   gawk              # awk
+  grim
+  hyprland
+  hyprlock
+  hyprpaper
   iproute2          # ip
   kitty
   libnotify         # notify-send
+  neovim
   networkmanager    # inclui nmtui
   nwg-bar
+  rofi
   pamixer
   pipewire-pulse    # provê pactl
   playerctl
   procps-ng         # pgrep
   radeontop
   sed
+  slurp
   waybar
-  hyprland
+  zsh
   papirus-icon-theme      # opcional: ícones Papirus
   ttf-jetbrains-mono-nerd # opcional: Nerd Font
   # adicione aqui: 'unzip' 'jq' 'jq' ...
@@ -124,11 +132,9 @@ bootstrap_yay() {
 }
 
 aur_install() {
-  [[ ${#@} -gt 0 ]] || return 0
+  [[ $# -gt 0 ]] || return 0
 
   check_aur
-    log "AUR helper '$AUR_HELPER' não encontrado. Iniciando bootstrap..."
-  fi
 
   local pkgs_to_install=()
   for p in "$@"; do
@@ -195,7 +201,6 @@ main() {
     check_aur
     aur_install "${AUR_PACKAGES[@]}"
   fi
-  fi
 
   log "✔ Dependências concluídas."
 }
@@ -204,8 +209,9 @@ main "$@"
 
 #------------------------------- Verificação AUR -----------------------------#
 check_aur() {
-  check_aur
+  if ! have "$AUR_HELPER"; then
     log "Nenhum AUR helper detectado. Preparando bootstrap de $AUR_HELPER…"
+    bootstrap_yay
   else
     log "✓ AUR helper '$AUR_HELPER' já configurado"
   fi
