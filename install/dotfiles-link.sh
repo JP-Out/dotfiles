@@ -2,64 +2,88 @@
 set -euo pipefail
 
 # ============================================================
-# dotfiles-link.sh — cria links simbólicos a partir do seu repo
-# ------------------------------------------------------------
+# dotfiles-link.sh — cria symlinks a partir do seu repo, em qualquer lugar
 # Opções:
-#   -n | --dry-run   : mostra o que faria, sem alterar nada
-#   -f | --force     : sobrescreve mesmo se já houver symlink diferente
+#   -n | --dry-run   : só mostra o que faria
+#   -f | --force     : relinka se já houver symlink diferente
 #   -v | --verbose   : saída detalhada
-#
-# Ex:
-#   ./dotfiles-link.sh --dry-run
-#   ./dotfiles-link.sh -v
+# Variáveis:
+#   BASE_DIR         : força o caminho do repo (opcional)
 # ============================================================
 
-DRY_RUN=0
-FORCE=0
-VERBOSE=0
-
+DRY_RUN=0; FORCE=0; VERBOSE=0
 log()  { printf '%s\n' "$*"; }
 vlog() { [ "$VERBOSE" -eq 1 ] && printf '%s\n' "$*"; }
 run()  { if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] $*"; else eval "$@"; fi; }
 
-# --- Ajuste se o repo não estiver em ~/.dotfiles
-BASE_DIR="${BASE_DIR:-"$HOME/.dotfiles"}"
-
-timestamp() { date +'%Y%m%d-%H%M%S'; }
-
-backup_path() {
-  local path="$1"
-  printf '%s.bak-%s' "$path" "$(timestamp)"
+# ---------- Descobre diretório do script (resolve symlinks) ----------
+resolve_script_dir() {
+  local src="${BASH_SOURCE[0]}"
+  while [ -h "$src" ]; do
+    local link; link="$(readlink "$src")"
+    if [[ "$link" = /* ]]; then src="$link"; else src="$(cd -P -- "$(dirname -- "$src")" && pwd)/$link"; fi
+  done
+  cd -P -- "$(dirname -- "$src")" && pwd
 }
 
-# Cria diretório pai (mkdir -p) do caminho informado
+SCRIPT_DIR="$(resolve_script_dir)"
+
+# ---------- Descobre BASE_DIR automaticamente ----------
+detect_base_dir() {
+  # 1) Variável de ambiente (prioridade máxima)
+  if [ -n "${BASE_DIR:-}" ]; then
+    printf '%s\n' "$(realpath -m -- "$BASE_DIR")"
+    return
+  fi
+
+  # 2) Git toplevel (se estiver dentro do repo)
+  if command -v git >/dev/null 2>&1; then
+    if top=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || true); then
+      if [ -n "$top" ]; then
+        printf '%s\n' "$(realpath -m -- "$top")"
+        return
+      fi
+    fi
+  fi
+
+  # 3) Sobe diretórios a partir do SCRIPT_DIR procurando estrutura típica
+  local probe="$SCRIPT_DIR"
+  while [[ "$probe" != "/" ]]; do
+    if [[ -d "$probe/config" && -d "$probe/zsh" ]]; then
+      printf '%s\n' "$probe"
+      return
+    fi
+    probe="$(dirname -- "$probe")"
+  done
+
+  # 4) Fallback: pasta do script
+  printf '%s\n' "$SCRIPT_DIR"
+}
+
+BASE_DIR="$(detect_base_dir)"
+BASE_DIR="$(realpath -m -- "$BASE_DIR")"
+
+timestamp() { date +'%Y%m%d-%H%M%S'; }
+backup_path() { printf '%s.bak-%s' "$1" "$(timestamp)"; }
+
 ensure_parent_dir() {
   local target="$1"
   local parent; parent="$(dirname -- "$target")"
   [ -d "$parent" ] || run "mkdir -p -- \"$parent\""
 }
 
-# Linka um único par DEST -> SRC
 link_one() {
-  local dest="$1"
-  local src="$2"
-
-  # Expande ~ se aparecer no mapping (defensivo)
+  local dest="$1" relsrc="$2"
   dest="${dest/#\~/$HOME}"
 
-  # Substitui prefixo /home/shaka por $HOME de forma segura
-  local home_prefix="/home/$(id -un)"
-  dest="${dest/#\/home\/shaka/$HOME}"
-
-  # Fonte dentro do repo (permite caminho absoluto também)
-  if [[ "$src" == /* ]]; then
-    source_path="$src"
+  # Origem é relativa ao BASE_DIR (ou absoluta, se vier /…)
+  local source_path
+  if [[ "$relsrc" == /* ]]; then
+    source_path="$relsrc"
   else
-    source_path="$BASE_DIR/$src"
+    source_path="$BASE_DIR/$relsrc"
   fi
-
-  # Normaliza também os exemplos que vieram absolutos do seu texto:
-  source_path="${source_path/#\/home\/shaka\/.dotfiles/$BASE_DIR}"
+  source_path="$(realpath -m -- "$source_path")"
 
   if [ ! -e "$source_path" ]; then
     log "⚠️  Origem inexistente: $source_path  (pulado)"
@@ -69,27 +93,25 @@ link_one() {
   ensure_parent_dir "$dest"
 
   if [ -L "$dest" ]; then
-    # Já é link simbólico
     local current; current="$(readlink -- "$dest")" || true
+    # Normaliza current relativo para absoluto baseado no dest parent
+    if [[ "$current" != /* ]]; then
+      current="$(realpath -m -- "$(dirname -- "$dest")/$current")"
+    fi
     if [ "$current" = "$source_path" ]; then
       vlog "✓ Já aponta corretamente: $dest -> $source_path"
       return 0
-    else
-      if [ "$FORCE" -eq 1 ]; then
-        vlog "↻ Relink (force): $dest (era -> $current)"
-        run "ln -sfn -- \"$source_path\" \"$dest\""
-      else
-        local bak; bak="$(backup_path "$dest")"
-        log "ℹ️  Symlink diferente encontrado. Movendo para $bak"
-        run "mv -- \"$dest\" \"$bak\""
-        run "ln -s -- \"$source_path\" \"$dest\""
-      fi
-      return 0
     fi
-  fi
-
-  if [ -e "$dest" ]; then
-    # Existe arquivo/dir comum
+    if [ "$FORCE" -eq 1 ]; then
+      vlog "↻ Relink (force): $dest (era -> $current)"
+      run "ln -sfn -- \"$source_path\" \"$dest\""
+      return 0
+    else
+      local bak; bak="$(backup_path "$dest")"
+      log "ℹ️  Symlink diferente encontrado. Movendo para: $bak"
+      run "mv -- \"$dest\" \"$bak\""
+    fi
+  elif [ -e "$dest" ]; then
     local bak; bak="$(backup_path "$dest")"
     log "ℹ️  Existe em $dest. Movendo para backup: $bak"
     run "mv -- \"$dest\" \"$bak\""
@@ -113,25 +135,28 @@ Opções:
   -n, --dry-run   Mostra o que faria sem mudar nada
   -f, --force     Força relink quando já houver symlink diferente
   -v, --verbose   Saída detalhada
-Vars:
-  BASE_DIR        (padrão: \$HOME/.dotfiles)
 
-Exemplos:
-  BASE_DIR="\$HOME/dev/dotfiles" $(basename "$0") -v
-  $(basename "$0") --dry-run
+Você pode definir BASE_DIR para forçar o caminho do repositório.
 EOF
-      exit 0
-      ;;
+      exit 0 ;;
     *) log "Opção desconhecida: $1"; exit 2 ;;
-  esac
-  shift
+  esac; shift
 done
 
+# -------------------- SANITY CHECK --------------------
+if [[ ! -d "$BASE_DIR/config" || ! -d "$BASE_DIR/zsh" ]]; then
+  log "⚠️  Aviso: BASE_DIR não parece um repo de dotfiles esperado:"
+  log "    BASE_DIR = $BASE_DIR"
+  log "    (faltando 'config/' e/ou 'zsh/'). Continuando mesmo assim…"
+fi
+
+log "==> Repo detectado em: $BASE_DIR"
+[ "$DRY_RUN" -eq 1 ] && log "(modo dry-run: nenhuma alteração será feita)"
+[ "$FORCE" -eq 1 ] && vlog "(force ON)"
+[ "$VERBOSE" -eq 1 ] && vlog "(verbose ON)"
+
 # -------------------- MAPEAMENTO --------------------
-# Formato: DESTINO|ORIGEM_NO_REPO_ou_ABSOLUTO
-# Observação:
-# - Você pode remover/ajustar qualquer linha abaixo.
-# - Caminhos absolutos em /home/shaka/.dotfiles são normalizados para \$BASE_DIR.
+# Formato: DESTINO|ORIGEM_RELATIVA_AO_BASE_DIR (ou absoluta)
 MAP=$(cat <<'EOF'
 $HOME/.zshenv.bak|zsh/zshenv
 $HOME/.zprofile.bak|zsh/zprofile
@@ -159,12 +184,6 @@ EOF
 )
 
 # -------------------- EXECUÇÃO --------------------
-log "==> Criando links simbólicos a partir de: $BASE_DIR"
-[ "$DRY_RUN" -eq 1 ] && log "(modo dry-run: nenhuma alteração será feita)"
-[ "$FORCE"  -eq 1 ] && vlog "(force ON)"
-[ "$VERBOSE" -eq 1 ] && vlog "(verbose ON)"
-
-# Itera o mapa (pula linhas vazias/comentários)
 while IFS= read -r line; do
   [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
   IFS='|' read -r dest src <<<"$line"
