@@ -131,6 +131,16 @@ bootstrap_yay() {
   popd >/dev/null
 }
 
+#------------------------------- Verificação AUR -----------------------------#
+check_aur() {
+  if ! have "$AUR_HELPER"; then
+    log "Nenhum AUR helper detectado. Preparando bootstrap de $AUR_HELPER…"
+    bootstrap_yay
+  else
+    log "✓ AUR helper '$AUR_HELPER' já configurado"
+  fi
+}
+
 aur_install() {
   [[ $# -gt 0 ]] || return 0
 
@@ -207,12 +217,3 @@ main() {
 
 main "$@"
 
-#------------------------------- Verificação AUR -----------------------------#
-check_aur() {
-  if ! have "$AUR_HELPER"; then
-    log "Nenhum AUR helper detectado. Preparando bootstrap de $AUR_HELPER…"
-    bootstrap_yay
-  else
-    log "✓ AUR helper '$AUR_HELPER' já configurado"
-  fi
-}
