@@ -126,7 +126,8 @@
     "tooltip-format": "{controller_alias}\t{controller_address}",
     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
     "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
-    "on-click": "hyprctl dispatch exec '[float; size 650 480; center; class btctl]' 'kitty --class=btctl -e bluetoothctl'"
+    "on-click": "hyprctl dispatch exec '[float; size 650 480; center; class btctl]' 'kitty --class=btctl -e bluetoothctl'",
+    "on-click-right": "$HOME/.config/waybar/scripts/bt-reconnect.sh"
   },
 
   /* ─────────────────────────────
