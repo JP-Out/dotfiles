@@ -4,6 +4,9 @@
 *.env
 *.gpg
 
+# Variavel com o MAC da Alexa
+.env.local
+
 # Ignorar o Hyprpaper (Adiciona comentarios novos a cada troca de wallpaper)
 config/hypr/hyprpaper.conf
 
