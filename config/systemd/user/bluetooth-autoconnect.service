@@ -1,11 +1,9 @@
 [Unit]
-Description=Conectar dispositivo Bluetooth no login
-After=graphical.target
+Description=Auto-conectar Alexa via Bluetooth
+After=graphical-session.target
 
 [Service]
 Type=oneshot
 ExecStart=%h/bin/conectar_bluetooth.sh
-RemainAfterExit=yes
-
-[Install]
-WantedBy=default.target
+# trata códigos não-críticos como sucesso (ex.: 2 = MAC ausente, 3 = comando não encontrado)
+SuccessExitStatus=0 2 3

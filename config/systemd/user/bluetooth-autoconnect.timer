@@ -1,0 +1,15 @@
+# ~/.config/systemd/user/bluetooth-autoconnect.timer
+[Unit]
+Description=Retry de conexão Bluetooth após login
+
+[Timer]
+# dispara 15s após ativar o timer
+OnActiveSec=15s
+# repete a cada 20s (até você desabilitar o timer)
+OnUnitActiveSec=20s
+# mantém o agendamento entre boots (opcional, mas útil)
+Persistent=true
+Unit=bluetooth-autoconnect.service
+
+[Install]
+WantedBy=timers.target
