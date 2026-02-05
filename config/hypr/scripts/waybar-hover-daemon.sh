@@ -40,8 +40,8 @@ tiled_count_on_ws(){
 show_bar(){ pkill -SIGUSR1 waybar || true; hyprctl keyword general:gaps_out "$WITH_BAR" >/dev/null; }
 hide_bar(){ pkill -SIGUSR2 waybar || true; hyprctl keyword general:gaps_out "$NO_BAR"   >/dev/null; }
 
-state="hidden"
-hide_bar
+state="shown"
+show_bar
 
 while :; do
   mode="$(read_mode)"
