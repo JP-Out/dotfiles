@@ -28,6 +28,7 @@ PACMAN_PACKAGES=(
   iproute2          # ip
   kitty
   libnotify         # notify-send
+  mpv
   neovim
   networkmanager    # inclui nmtui
   nwg-bar
@@ -133,8 +134,9 @@ bootstrap_yay() {
 aur_install() {
   [[ ${#@} -gt 0 ]] || return 0
 
-  check_aur
+  if ! have "$AUR_HELPER"; then
     log "AUR helper '$AUR_HELPER' não encontrado. Iniciando bootstrap..."
+    bootstrap_yay
   fi
 
   local pkgs_to_install=()
@@ -202,18 +204,18 @@ main() {
     check_aur
     aur_install "${AUR_PACKAGES[@]}"
   fi
-  fi
 
   log "✔ Dependências concluídas."
 }
 
-main "$@"
-
 #------------------------------- Verificação AUR -----------------------------#
 check_aur() {
-  check_aur
+  if ! have "$AUR_HELPER"; then
     log "Nenhum AUR helper detectado. Preparando bootstrap de $AUR_HELPER…"
+    bootstrap_yay
   else
     log "✓ AUR helper '$AUR_HELPER' já configurado"
   fi
 }
+
+main "$@"
