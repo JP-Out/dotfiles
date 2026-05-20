@@ -8,6 +8,13 @@ WINDOW_Y=840
 WINDOW_WIDTH=405
 WINDOW_HEIGHT=230
 
+if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
+    STATE_DIR="$XDG_RUNTIME_DIR/hypr-rtsp-stream"
+else
+    STATE_DIR="/tmp/hypr-rtsp-stream-${UID:-$(id -u)}"
+fi
+LOG_FILE="$STATE_DIR/mpv.log"
+
 usage() {
     echo "Uso: $(basename "$0") sticky|normal" >&2
 }
@@ -24,6 +31,20 @@ need_hyprland() {
         echo "Não foi possível conectar ao Hyprland via hyprctl." >&2
         exit 1
     }
+}
+
+prepare_state_dir() {
+    mkdir -p "$STATE_DIR" || {
+        echo "Não foi possível criar o diretório de estado: $STATE_DIR" >&2
+        exit 1
+    }
+
+    if [[ ! -w "$STATE_DIR" ]]; then
+        echo "Sem permissão de escrita no diretório de estado: $STATE_DIR" >&2
+        exit 1
+    fi
+
+    chmod 700 "$STATE_DIR" 2>/dev/null || true
 }
 
 load_env() {
@@ -162,6 +183,7 @@ main() {
     need mpv
     need_hyprland
     load_env
+    prepare_state_dir
 
     if [[ "$mode" == "sticky" ]]; then
         close_all_rtsp_windows
@@ -184,7 +206,7 @@ main() {
         --mute=yes \
         --title="$window_title" \
         --wayland-app-id="$WINDOW_CLASS" \
-        "$stream" >/tmp/hypr-rtsp-stream.log 2>&1 &
+        "$stream" >"$LOG_FILE" 2>&1 &
 
     local mpv_pid="$!"
     local address=""
@@ -197,7 +219,7 @@ main() {
 
     if [[ -z "$address" || "$address" == "null" ]]; then
         kill "$mpv_pid" 2>/dev/null || true
-        echo "Não foi possível localizar a janela do mpv." >&2
+        echo "Não foi possível localizar a janela do mpv. Veja o log em: $LOG_FILE" >&2
         exit 1
     fi
 
