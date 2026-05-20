@@ -1,7 +1,6 @@
-# ~/.bash_profile ou ~/.zprofile
-if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
-    exec Hyprland
+# Hyprland só no TTY1
+if [[ -z $DISPLAY && $(tty) = /dev/tty1 ]]; then
+  exec start-hyprland
 fi
-
-# Keyring (silencioso, só se ainda não estiver ativo)
+# gnome-keyring silencioso e idempotente
 [ -n "$GNOME_KEYRING_CONTROL" ] || eval "$(gnome-keyring-daemon --start --components=secrets,ssh,pkcs11 2>/dev/null)"
