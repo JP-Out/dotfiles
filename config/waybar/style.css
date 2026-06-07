@@ -154,6 +154,7 @@ button {
 #wireplumber,
 #custom-pacman,
 #custom-power,
+#custom-whatsapp,
 #tray,
 #mode,
 #idle_inhibitor,
@@ -384,6 +385,59 @@ window#waybar .modules-right {
   font-size: 22px;
   color: #ffffff; /* branco */
   padding-right: 10px;
+}
+
+#custom-whatsapp {
+  min-width: 1px;
+  min-height: 0;
+  padding: 0 2px;
+  margin: 0;
+  font-size: 25px;
+  font-weight: 400;
+  letter-spacing: -4px;
+  color: #ffffff;
+  background: transparent;
+  border: 0;
+}
+
+#custom-whatsapp.hidden {
+  opacity: 0.55;
+  color: #ffffff;
+  background: transparent;
+  border: 0;
+}
+
+#custom-whatsapp.inactive {
+  opacity: 0.45;
+  background: transparent;
+  border: 0;
+}
+
+#custom-whatsapp.closed {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+
+menu {
+  background: @base;
+  color: @text;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 6px;
+  padding: 2px;
+  font-size: 12px;
+}
+
+menuitem {
+  padding: 3px 8px;
+  min-height: 0;
+  border-radius: 4px;
+}
+
+menuitem:hover {
+  background: rgba(255,255,255,0.10);
 }
 
 #custom-separator_tray,
