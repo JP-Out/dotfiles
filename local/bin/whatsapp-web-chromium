@@ -1,0 +1,67 @@
+#!/bin/sh
+set -eu
+
+app_class="chrome-web.whatsapp.com__-Default"
+profile_dir="$HOME/.local/share/whatsapp-web-chromium"
+runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+socket="${runtime_dir}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket.sock"
+
+is_hyprland() {
+	[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] || [ "${XDG_CURRENT_DESKTOP:-}" = "Hyprland" ]
+}
+
+hypr_query() {
+	printf '%s' "$1" | nc -U "$socket"
+}
+
+hypr_dispatch() {
+	hyprctl dispatch "$@" >/dev/null
+}
+
+if [ -S "$socket" ] && command -v nc >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && is_hyprland; then
+	clients_json="$(hypr_query 'j/clients' 2>/dev/null || printf '[]')"
+	client_json="$(printf '%s' "$clients_json" | jq -c --arg cls "$app_class" 'map(select(.class == $cls))[0] // empty')"
+	if [ -n "$client_json" ]; then
+		address="$(printf '%s' "$client_json" | jq -r '.address')"
+		workspace="$(printf '%s' "$client_json" | jq -r '.workspace.name // ""')"
+		active_workspace="$(hypr_query 'j/activeworkspace' 2>/dev/null | jq -r '.name // ""')"
+
+		if [ "$workspace" = "special:whatsapp" ] && [ -n "$active_workspace" ]; then
+			hypr_dispatch movetoworkspace "${active_workspace},address:${address}" || true
+		elif [ -n "$workspace" ] && [ "$workspace" != "$active_workspace" ]; then
+			hypr_dispatch workspace "$workspace" || true
+			sleep 0.05
+		fi
+
+		hypr_dispatch focuswindow "address:${address}" || \
+			hypr_dispatch focuswindow "class:${app_class}" || true
+		exit 0
+	fi
+elif command -v hyprctl >/dev/null 2>&1 && is_hyprland; then
+	if hyprctl clients 2>/dev/null | grep -Fq "class: ${app_class}"; then
+		hyprctl dispatch focuswindow "class:${app_class}" >/dev/null 2>&1 || true
+		exit 0
+	fi
+fi
+
+if command -v setsid >/dev/null 2>&1; then
+	setsid -f /usr/bin/chromium \
+		--app=https://web.whatsapp.com \
+		--user-data-dir="${profile_dir}" \
+		--class=WhatsAppWeb \
+		--name=WhatsAppWeb \
+		--no-first-run \
+		--disable-extensions \
+		--disable-background-mode \
+		--disable-features=Translate,OptimizationGuideModelDownloading,MediaRouter >/dev/null 2>&1
+else
+	nohup /usr/bin/chromium \
+	--app=https://web.whatsapp.com \
+	--user-data-dir="${profile_dir}" \
+	--class=WhatsAppWeb \
+	--name=WhatsAppWeb \
+	--no-first-run \
+	--disable-extensions \
+	--disable-background-mode \
+	--disable-features=Translate,OptimizationGuideModelDownloading,MediaRouter >/dev/null 2>&1 &
+fi

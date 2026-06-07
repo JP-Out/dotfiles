@@ -41,6 +41,7 @@
     "custom/net_speed"
   ],
   "modules-right": [
+    "custom/whatsapp",
     "tray",
     "custom/separator_tray",
     "custom/clipboard",
@@ -215,6 +216,19 @@
     "format": "",
     "tooltip-format": "Área de Transferência",
     "on-click": "copyq toggle & sleep 0.1 && hyprctl dispatch focuswindow \"class:^(com.github.hluk.copyq)$\""
+  },
+  "custom/whatsapp": {
+    "exec": "~/.config/waybar/scripts/whatsapp_status.sh",
+    "interval": 2,
+    "return-type": "json",
+    "on-click": "~/.local/bin/whatsapp-web-chromium",
+    "menu": "on-click-right",
+    "menu-file": "~/.config/waybar/whatsapp_menu.xml",
+    "menu-actions": {
+      "open": "~/.config/waybar/scripts/whatsapp_menu_action.sh open",
+      "hide": "~/.config/waybar/scripts/whatsapp_menu_action.sh hide",
+      "quit": "~/.config/waybar/scripts/whatsapp_menu_action.sh quit"
+    }
   },
   "custom/clock": {
     "exec": "~/.config/waybar/scripts/clock_ptbr_json.sh",

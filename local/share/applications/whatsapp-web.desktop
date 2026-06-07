@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=WhatsApp
+GenericName=WhatsApp Web
+Comment=WhatsApp Web em janela dedicada do Chromium
+Exec=/home/shaka/.local/bin/whatsapp-web-chromium
+Icon=/home/shaka/.local/share/icons/whatsapp.svg
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+StartupNotify=false
+StartupWMClass=chrome-web.whatsapp.com__-Default

@@ -180,6 +180,10 @@ $HOME/.config/nvim|config/nvim
 $HOME/.config/systemd/user|config/systemd/user
 $HOME/.local/share/Trash/files/cliphist.service|config/systemd/user/cliphist.service
 $HOME/.local/bin/screenshot.sh|config/grim/screenshot.sh
+$HOME/.local/bin/whatsapp-web-chromium|local/bin/whatsapp-web-chromium
+$HOME/.local/share/applications/whatsapp-web.desktop|local/share/applications/whatsapp-web.desktop
+$HOME/.local/share/icons/whatsapp.svg|local/share/icons/whatsapp.svg
+$HOME/.local/share/icons/whatsapp-white.svg|local/share/icons/whatsapp-white.svg
 EOF
 )
 
