@@ -7,6 +7,9 @@
   const SIDEBAR_BUTTON_ID = "wwdt-sidebar-toggle";
   const NOTIFICATION_BUTTON_ID = "wwdt-notification-button";
   const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
+  const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
+  const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
+  const EXTERNAL_LINK_BRIDGE_ATTR = "data-wwdt-external-link-bridge";
   const devtoolsMode = new URLSearchParams(window.location.search).get("wwdt-devtools") === "1";
   const manifest = chrome.runtime.getManifest();
   const canHandleExternalLinks =
@@ -491,7 +494,7 @@
   function openExternalLink(url) {
     chrome.runtime.sendMessage({ type: OPEN_EXTERNAL_LINK, url }, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        window.open(url, "_blank", "noopener,noreferrer");
+        console.warn("WWDT: failed to open external link in default browser", chrome.runtime.lastError || response);
       }
     });
   }
@@ -507,6 +510,38 @@
     event.preventDefault();
     event.stopImmediatePropagation();
     openExternalLink(anchor.href);
+  }
+
+  function handleExternalLinkRequest(event) {
+    if (typeof event.detail !== "string") return;
+    openExternalLink(event.detail);
+  }
+
+  function setExternalLinkBridgeReady(ready) {
+    if (ready) {
+      document.documentElement.setAttribute(EXTERNAL_LINK_BRIDGE_ATTR, "1");
+    } else {
+      document.documentElement.removeAttribute(EXTERNAL_LINK_BRIDGE_ATTR);
+    }
+  }
+
+  function enableExternalLinkHandling() {
+    if (!canHandleExternalLinks) {
+      setExternalLinkBridgeReady(false);
+      return;
+    }
+
+    chrome.runtime.sendMessage({ type: PING_EXTERNAL_LINK_HOST }, (response) => {
+      if (chrome.runtime.lastError || !response?.ok) {
+        setExternalLinkBridgeReady(false);
+        console.warn("WWDT: external link bridge is not available", chrome.runtime.lastError || response);
+        return;
+      }
+
+      setExternalLinkBridgeReady(true);
+      document.addEventListener("click", handleExternalLinkClick, true);
+      window.addEventListener(EXTERNAL_LINK_REQUEST_EVENT, handleExternalLinkRequest, true);
+    });
   }
 
   function escapeHtml(value) {
@@ -528,9 +563,7 @@
   if (!devtoolsMode) {
     document.addEventListener("keydown", blockChromiumShortcut, true);
     document.addEventListener("contextmenu", suppressChromiumContextMenu, true);
-    if (canHandleExternalLinks) {
-      document.addEventListener("click", handleExternalLinkClick, true);
-    }
+    enableExternalLinkHandling();
   }
 
   const observer = new MutationObserver(scheduleRefresh);
