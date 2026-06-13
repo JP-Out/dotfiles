@@ -109,6 +109,17 @@ body:has(#side.wwdt-chat-pane-collapsed) div:has(> #side.wwdt-chat-pane-collapse
   border: 0 !important;
 }
 
+.wwdt-collapse-divider-cleanup {
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+.wwdt-collapse-divider-cleanup::before,
+.wwdt-collapse-divider-cleanup::after {
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
 .wwdt-modal-backdrop {
   position: fixed;
   inset: 0;
