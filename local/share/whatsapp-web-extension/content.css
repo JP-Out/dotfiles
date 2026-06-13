@@ -83,13 +83,29 @@
 }
 
 .wwdt-chat-pane-collapsed {
+  display: none !important;
   flex: 0 0 0 !important;
   width: 0 !important;
   min-width: 0 !important;
   max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   overflow: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
+  border: 0 !important;
+}
+
+body:has(#side.wwdt-chat-pane-collapsed) div:has(> #side.wwdt-chat-pane-collapsed) {
+  display: none !important;
+  flex: 0 0 0 !important;
+  flex-basis: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
   border: 0 !important;
 }
 

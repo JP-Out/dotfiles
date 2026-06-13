@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WhatsApp Web Desktop Tweaks",
   "description": "Ajustes locais para o pseudo-app do WhatsApp Web no Chromium.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "permissions": [
     "storage",
     "unlimitedStorage"
