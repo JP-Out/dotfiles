@@ -8,6 +8,11 @@
   const NOTIFICATION_BUTTON_ID = "wwdt-notification-button";
   const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
   const devtoolsMode = new URLSearchParams(window.location.search).get("wwdt-devtools") === "1";
+  const manifest = chrome.runtime.getManifest();
+  const canHandleExternalLinks =
+    Array.isArray(manifest.permissions) &&
+    manifest.permissions.includes("nativeMessaging") &&
+    Boolean(manifest.background?.service_worker);
 
   const BUILTIN_SOUNDS = [
     {
@@ -484,8 +489,8 @@
   }
 
   function openExternalLink(url) {
-    chrome.runtime.sendMessage({ type: OPEN_EXTERNAL_LINK, url }, () => {
-      if (chrome.runtime.lastError) {
+    chrome.runtime.sendMessage({ type: OPEN_EXTERNAL_LINK, url }, (response) => {
+      if (chrome.runtime.lastError || !response?.ok) {
         window.open(url, "_blank", "noopener,noreferrer");
       }
     });
@@ -523,7 +528,9 @@
   if (!devtoolsMode) {
     document.addEventListener("keydown", blockChromiumShortcut, true);
     document.addEventListener("contextmenu", suppressChromiumContextMenu, true);
-    document.addEventListener("click", handleExternalLinkClick, true);
+    if (canHandleExternalLinks) {
+      document.addEventListener("click", handleExternalLinkClick, true);
+    }
   }
 
   const observer = new MutationObserver(scheduleRefresh);

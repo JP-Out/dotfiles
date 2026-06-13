@@ -6,6 +6,7 @@ profile_dir="$HOME/.local/share/whatsapp-web-chromium"
 app_url="https://web.whatsapp.com"
 chromium_extra_args=""
 extension_dir="$HOME/.local/share/whatsapp-web-extension"
+legacy_extension_id="pegillnacjhfdokcfpieidpbbknaaghh"
 extension_args=""
 start_hidden="0"
 if [ -d "$extension_dir" ]; then
@@ -39,6 +40,43 @@ hypr_query() {
 
 hypr_dispatch() {
 	hyprctl dispatch "$@" >/dev/null
+}
+
+cleanup_legacy_extension_state() {
+	default_dir="${profile_dir}/Default"
+
+	if ! command -v jq >/dev/null 2>&1; then
+		return
+	fi
+
+	for state_file in "${default_dir}/Preferences" "${default_dir}/Secure Preferences"; do
+		[ -f "${state_file}" ] || continue
+
+		tmp_file="${state_file}.wwdt.$$"
+		if jq --arg old "${legacy_extension_id}" '
+			if (.extensions? and .extensions.settings?) then
+				.extensions.settings |= with_entries(select(.key != $old))
+			else
+				.
+			end
+			| if (.protection? and .protection.macs? and .protection.macs.extensions? and .protection.macs.extensions.settings?) then
+				.protection.macs.extensions.settings |= with_entries(select(.key != $old))
+			else
+				.
+			end
+			| if (.protection? and .protection.macs? and .protection.macs.extensions? and .protection.macs.extensions.settings_encrypted_hash?) then
+				.protection.macs.extensions.settings_encrypted_hash |= with_entries(select(.key != $old))
+			else
+				.
+			end
+		' "${state_file}" > "${tmp_file}"; then
+			mv "${tmp_file}" "${state_file}"
+		else
+			rm -f "${tmp_file}"
+		fi
+	done
+
+	rm -rf "${default_dir}/Local Extension Settings/${legacy_extension_id}"
 }
 
 launch_chromium() {
@@ -136,6 +174,7 @@ elif command -v hyprctl >/dev/null 2>&1 && is_hyprland; then
 	fi
 fi
 
+cleanup_legacy_extension_state
 launch_chromium
 
 if [ "$start_hidden" = "0" ] && [ -S "$socket" ] && command -v nc >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && is_hyprland; then
