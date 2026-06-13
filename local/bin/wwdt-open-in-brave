@@ -7,11 +7,11 @@ import sys
 
 
 def find_browser():
-    for candidate in ("brave", "brave-browser"):
+    for candidate in ("xdg-open", "brave", "brave-browser"):
         path = shutil.which(candidate)
         if path:
             return path
-    return shutil.which("xdg-open")
+    return None
 
 
 def send_message(payload):
@@ -26,9 +26,10 @@ def launch_url(url):
     if not browser:
         return False, "No browser launcher found"
 
-    command = [browser, url]
     if browser.endswith("/brave") or browser.endswith("/brave-browser"):
         command = [browser, "--new-tab", url]
+    else:
+        command = [browser, url]
 
     subprocess.Popen(
         command,
@@ -64,6 +65,16 @@ def handle_url(url):
     return {"ok": True}
 
 
+def handle_message(message):
+    if isinstance(message, dict) and message.get("ping") is True:
+        return {"ok": find_browser() is not None}
+
+    if not isinstance(message, dict):
+        return {"ok": False, "error": "Invalid message"}
+
+    return handle_url(message.get("url"))
+
+
 def main():
     if len(sys.argv) == 3 and sys.argv[1] == "--url":
         payload = handle_url(sys.argv[2])
@@ -74,7 +85,7 @@ def main():
     if message is None:
         return 1
 
-    send_message(handle_url(message.get("url")))
+    send_message(handle_message(message))
     return 0
 
 
