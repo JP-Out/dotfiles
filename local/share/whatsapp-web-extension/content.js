@@ -239,11 +239,9 @@
   }
 
   function findSidebarTarget() {
-    const direct = document.querySelector("#side");
-    if (direct) return direct;
-
-    const chatList = document.querySelector(
+    const anchor = document.querySelector(
       [
+        "#side",
         "#pane-side",
         "[data-testid='chat-list']",
         "[aria-label='Lista de conversas']",
@@ -251,13 +249,24 @@
       ].join(",")
     );
 
-    if (!chatList) return null;
+    if (!anchor) return null;
 
-    let candidate = chatList;
-    let node = chatList.parentElement;
+    let candidate = anchor;
+    let node = anchor.parentElement;
     while (node && node !== document.body) {
       const rect = node.getBoundingClientRect();
-      if (rect.height > window.innerHeight * 0.65 && rect.width > 220 && rect.width < window.innerWidth * 0.55) {
+      const styles = getComputedStyle(node);
+      const keepsNavRailVisible = rect.left > 48;
+      const reservesSidebarWidth =
+        styles.flexBasis.endsWith("%") ||
+        styles.maxWidth.endsWith("%") ||
+        styles.flex.includes("%");
+      const looksLikeSidebarColumn =
+        rect.height > window.innerHeight * 0.65 &&
+        rect.width > 220 &&
+        rect.width < window.innerWidth * 0.55;
+
+      if (keepsNavRailVisible && looksLikeSidebarColumn && reservesSidebarWidth) {
         candidate = node;
       }
       node = node.parentElement;
@@ -269,6 +278,10 @@
   function setSidebarCollapsed(collapsed, persist = false) {
     settings.sidebarCollapsed = Boolean(collapsed);
     sidebarTarget = findSidebarTarget() || sidebarTarget;
+
+    document.querySelectorAll(".wwdt-chat-pane-collapsed").forEach((node) => {
+      if (node !== sidebarTarget) node.classList.remove("wwdt-chat-pane-collapsed");
+    });
 
     if (sidebarTarget) {
       sidebarTarget.classList.toggle("wwdt-chat-pane-collapsed", settings.sidebarCollapsed);
