@@ -9,16 +9,20 @@
 }
 
 .wwdt-nav-shell {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #aebac1;
 }
 
 .wwdt-nav-button {
   appearance: none;
   border: 0;
   background: transparent;
-  color: #aebac1;
+  color: inherit;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -29,26 +33,53 @@
   padding: 0;
   transition:
     background-color 120ms ease,
+    color 120ms ease;
+}
+
+.wwdt-nav-button:hover {
+  background: rgba(134, 150, 160, 0.12);
+}
+
+.wwdt-nav-button:active .wwdt-nav-icon-frame {
+  transform: scale(0.92);
+}
+
+.wwdt-nav-shell.wwdt-nav-selected,
+.wwdt-nav-button[data-navbar-item-selected="true"] {
+  color: var(--wwdt-wa-text);
+}
+
+.wwdt-nav-shell.wwdt-nav-selected .wwdt-nav-button,
+.wwdt-nav-button[data-navbar-item-selected="true"] {
+  background: rgba(134, 150, 160, 0.22);
+}
+
+.wwdt-nav-shell.wwdt-nav-selected .wwdt-nav-button:hover,
+.wwdt-nav-button[data-navbar-item-selected="true"]:hover {
+  background: rgba(134, 150, 160, 0.26);
+}
+
+.wwdt-nav-icon-frame {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  transition:
     color 120ms ease,
     transform 90ms ease;
 }
 
-.wwdt-nav-button:hover {
-  background: rgba(134, 150, 160, 0.14);
-}
-
-.wwdt-nav-button:active {
-  transform: scale(0.92);
-}
-
-.wwdt-nav-button[aria-pressed="true"] {
-  color: var(--wwdt-wa-green-strong);
-}
-
-.wwdt-nav-button svg {
+.wwdt-nav-icon {
   width: 24px;
   height: 24px;
   display: block;
+  color: inherit;
+}
+
+.wwdt-selection-pill {
+  display: none;
 }
 
 .wwdt-chat-pane-collapsed {
