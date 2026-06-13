@@ -3,6 +3,12 @@ set -eu
 
 app_class="chrome-web.whatsapp.com__-Default"
 profile_dir="$HOME/.local/share/whatsapp-web-chromium"
+extension_dir="$HOME/.local/share/whatsapp-web-extension"
+extension_args=""
+if [ -d "$extension_dir" ]; then
+	extension_args="--disable-extensions-except=${extension_dir} --load-extension=${extension_dir}"
+fi
+mkdir -p "$profile_dir" "$profile_dir/notification-sounds"
 runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 socket="${runtime_dir}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket.sock"
 
@@ -51,17 +57,21 @@ if command -v setsid >/dev/null 2>&1; then
 		--class=WhatsAppWeb \
 		--name=WhatsAppWeb \
 		--no-first-run \
-		--disable-extensions \
+		--disable-sync \
+		--disable-default-apps \
 		--disable-background-mode \
+		${extension_args} \
 		--disable-features=Translate,OptimizationGuideModelDownloading,MediaRouter >/dev/null 2>&1
 else
 	nohup /usr/bin/chromium \
-	--app=https://web.whatsapp.com \
-	--user-data-dir="${profile_dir}" \
-	--class=WhatsAppWeb \
-	--name=WhatsAppWeb \
-	--no-first-run \
-	--disable-extensions \
-	--disable-background-mode \
-	--disable-features=Translate,OptimizationGuideModelDownloading,MediaRouter >/dev/null 2>&1 &
+		--app=https://web.whatsapp.com \
+		--user-data-dir="${profile_dir}" \
+		--class=WhatsAppWeb \
+		--name=WhatsAppWeb \
+		--no-first-run \
+		--disable-sync \
+		--disable-default-apps \
+		--disable-background-mode \
+		${extension_args} \
+		--disable-features=Translate,OptimizationGuideModelDownloading,MediaRouter >/dev/null 2>&1 &
 fi

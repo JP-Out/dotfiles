@@ -1,0 +1,221 @@
+:root {
+  --wwdt-wa-green: #00a884;
+  --wwdt-wa-green-strong: #06cf9c;
+  --wwdt-wa-panel: #202c33;
+  --wwdt-wa-panel-2: #111b21;
+  --wwdt-wa-text: #e9edef;
+  --wwdt-wa-muted: #8696a0;
+  --wwdt-wa-border: rgba(134, 150, 160, 0.24);
+}
+
+.wwdt-nav-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wwdt-nav-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #aebac1;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 90ms ease;
+}
+
+.wwdt-nav-button:hover {
+  background: rgba(134, 150, 160, 0.14);
+}
+
+.wwdt-nav-button:active {
+  transform: scale(0.92);
+}
+
+.wwdt-nav-button[aria-pressed="true"] {
+  color: var(--wwdt-wa-green-strong);
+}
+
+.wwdt-nav-button svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.wwdt-chat-pane-collapsed {
+  flex: 0 0 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border: 0 !important;
+}
+
+.wwdt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 20, 26, 0.62);
+}
+
+.wwdt-modal {
+  width: min(500px, calc(100vw - 32px));
+  max-height: min(620px, calc(100vh - 32px));
+  display: flex;
+  flex-direction: column;
+  color: var(--wwdt-wa-text);
+  background: #1f2c33;
+  border-radius: 16px;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.36);
+  overflow: hidden;
+  transform-origin: center;
+  animation: wwdt-modal-in 140ms ease-out;
+}
+
+@keyframes wwdt-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.wwdt-modal-body {
+  padding: 24px 26px 12px;
+  overflow: auto;
+}
+
+.wwdt-modal h1 {
+  margin: 0 0 22px;
+  font: 400 20px/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--wwdt-wa-text);
+}
+
+.wwdt-sound-list {
+  display: grid;
+  gap: 4px;
+}
+
+.wwdt-radio-row,
+.wwdt-add-sound {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 2px;
+  color: var(--wwdt-wa-text);
+  background: transparent;
+  font: 400 15px/1.3 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wwdt-radio-row:hover,
+.wwdt-add-sound:hover {
+  background: rgba(134, 150, 160, 0.08);
+}
+
+.wwdt-radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--wwdt-wa-muted);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.wwdt-radio-row[aria-checked="true"] .wwdt-radio {
+  border-color: var(--wwdt-wa-green-strong);
+}
+
+.wwdt-radio-row[aria-checked="true"] .wwdt-radio::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--wwdt-wa-green-strong);
+}
+
+.wwdt-add-sound {
+  margin-top: 10px;
+  color: var(--wwdt-wa-green-strong);
+}
+
+.wwdt-add-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.wwdt-add-icon::before,
+.wwdt-add-icon::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+}
+
+.wwdt-add-icon::after {
+  width: 2px;
+  height: 10px;
+}
+
+.wwdt-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 18px 26px 24px;
+}
+
+.wwdt-action {
+  border: 0;
+  border-radius: 999px;
+  min-width: 68px;
+  min-height: 40px;
+  padding: 0 18px;
+  color: var(--wwdt-wa-green-strong);
+  background: transparent;
+  font: 500 14px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+}
+
+.wwdt-action:hover {
+  background: rgba(134, 150, 160, 0.12);
+}
+
+.wwdt-action-primary {
+  color: #061d17;
+  background: #25d366;
+}
+
+.wwdt-action-primary:hover {
+  background: #2add6f;
+}
