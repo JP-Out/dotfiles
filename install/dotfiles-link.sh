@@ -184,6 +184,7 @@ $HOME/.local/bin/whatsapp-web-chromium|local/bin/whatsapp-web-chromium
 $HOME/.local/share/applications/whatsapp-web.desktop|local/share/applications/whatsapp-web.desktop
 $HOME/.local/share/icons/whatsapp.svg|local/share/icons/whatsapp.svg
 $HOME/.local/share/icons/whatsapp-white.svg|local/share/icons/whatsapp-white.svg
+$HOME/.local/share/whatsapp-web-extension|local/share/whatsapp-web-extension
 EOF
 )
 
