@@ -6,6 +6,7 @@
   const STORAGE_SOUND_URL = "wwdt.notificationSoundUrl";
   const SIDEBAR_BUTTON_ID = "wwdt-sidebar-toggle";
   const NOTIFICATION_BUTTON_ID = "wwdt-notification-button";
+  const devtoolsMode = new URLSearchParams(window.location.search).get("wwdt-devtools") === "1";
 
   const BUILTIN_SOUNDS = [
     {
@@ -335,8 +336,10 @@
     });
   }
 
-  document.addEventListener("keydown", blockChromiumShortcut, true);
-  document.addEventListener("contextmenu", suppressChromiumContextMenu, true);
+  if (!devtoolsMode) {
+    document.addEventListener("keydown", blockChromiumShortcut, true);
+    document.addEventListener("contextmenu", suppressChromiumContextMenu, true);
+  }
 
   const observer = new MutationObserver(scheduleRefresh);
   observer.observe(document.documentElement, { childList: true, subtree: true });
