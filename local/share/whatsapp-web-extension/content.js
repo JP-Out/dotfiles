@@ -254,6 +254,11 @@
     let candidate = anchor;
     let node = anchor.parentElement;
     while (node && node !== document.body) {
+      if (node.querySelector(":scope > #side")) {
+        candidate = node;
+        break;
+      }
+
       const rect = node.getBoundingClientRect();
       const styles = getComputedStyle(node);
       const keepsNavRailVisible = rect.left > 48;
@@ -287,8 +292,34 @@
       sidebarTarget.classList.toggle("wwdt-chat-pane-collapsed", settings.sidebarCollapsed);
     }
 
+    updateCollapsedLayoutClasses();
     updateSidebarButton();
     if (persist) saveSettings();
+  }
+
+  function updateCollapsedLayoutClasses() {
+    document.body.classList.toggle("wwdt-sidebar-is-collapsed", settings.sidebarCollapsed);
+    document.querySelectorAll(".wwdt-layout-sidebar-collapsed, .wwdt-collapse-divider-cleanup").forEach((node) => {
+      node.classList.remove("wwdt-layout-sidebar-collapsed", "wwdt-collapse-divider-cleanup");
+    });
+
+    if (!settings.sidebarCollapsed || !sidebarTarget?.parentElement) return;
+
+    const layoutRoot = sidebarTarget.parentElement;
+    layoutRoot.classList.add("wwdt-layout-sidebar-collapsed");
+
+    const navRail = layoutRoot.querySelector("header[data-testid='chatlist-header']");
+    const navRailRight = navRail ? navRail.getBoundingClientRect().right : 64;
+
+    layoutRoot.querySelectorAll("div, section, main, span").forEach((node) => {
+      const rect = node.getBoundingClientRect();
+      if (rect.height < window.innerHeight * 0.72 || rect.left <= navRailRight + 8) return;
+
+      const styles = getComputedStyle(node);
+      if (parseFloat(styles.borderLeftWidth) > 0) {
+        node.classList.add("wwdt-collapse-divider-cleanup");
+      }
+    });
   }
 
   function updateSidebarButton() {
