@@ -1,0 +1,9 @@
+{
+  "name": "com.shaka.wwdt_brave",
+  "description": "Abre links externos do WhatsApp Web no Brave.",
+  "path": "/home/shaka/.local/bin/wwdt-open-in-brave",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://cdfllcdhkhafoplikbchoedlapjbfakn/"
+  ]
+}

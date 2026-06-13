@@ -6,6 +6,7 @@
   const STORAGE_SOUND_URL = "wwdt.notificationSoundUrl";
   const SIDEBAR_BUTTON_ID = "wwdt-sidebar-toggle";
   const NOTIFICATION_BUTTON_ID = "wwdt-notification-button";
+  const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
   const devtoolsMode = new URLSearchParams(window.location.search).get("wwdt-devtools") === "1";
 
   const BUILTIN_SOUNDS = [
@@ -463,6 +464,46 @@
     event.preventDefault();
   }
 
+  function findExternalAnchor(target) {
+    if (!(target instanceof Element)) return null;
+
+    const anchor = target.closest("a[href]");
+    if (!anchor || anchor.hasAttribute("download")) return null;
+
+    let href = "";
+    try {
+      href = new URL(anchor.href, window.location.href).href;
+    } catch (_) {
+      return null;
+    }
+
+    if (!/^https?:/i.test(href)) return null;
+    if (href.startsWith(`${window.location.origin}/`)) return null;
+
+    return anchor;
+  }
+
+  function openExternalLink(url) {
+    chrome.runtime.sendMessage({ type: OPEN_EXTERNAL_LINK, url }, () => {
+      if (chrome.runtime.lastError) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    });
+  }
+
+  function handleExternalLinkClick(event) {
+    if (event.defaultPrevented) return;
+    if (event.button !== 0) return;
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+
+    const anchor = findExternalAnchor(event.target);
+    if (!anchor) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openExternalLink(anchor.href);
+  }
+
   function escapeHtml(value) {
     const span = document.createElement("span");
     span.textContent = value;
@@ -482,6 +523,7 @@
   if (!devtoolsMode) {
     document.addEventListener("keydown", blockChromiumShortcut, true);
     document.addEventListener("contextmenu", suppressChromiumContextMenu, true);
+    document.addEventListener("click", handleExternalLinkClick, true);
   }
 
   const observer = new MutationObserver(scheduleRefresh);
