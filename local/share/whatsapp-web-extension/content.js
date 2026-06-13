@@ -32,23 +32,23 @@
   let sidebarTarget = null;
 
   const collapsedIcon = `
-    <svg viewBox="0 0 423 423" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect x="43.25" y="42.25" width="96" height="338" rx="18" fill="currentColor" opacity="0.78"/>
-      <path d="M60.1667 405.5H146.5M60.1667 405.5H362.333C386.174 405.5 405.5 386.174 405.5 362.333V60.1667C405.5 36.3264 386.174 17 362.333 17H60.1667M60.1667 405.5C36.3264 405.5 17 386.174 17 362.333V60.1667C17 36.3264 36.3264 17 60.1667 17M60.1667 17H146.5" stroke="currentColor" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M161.25 405.75V211.5V17.25" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="wwdt-nav-icon">
+      <rect x="3" y="3" width="18" height="18" rx="3.6" stroke="currentColor" stroke-width="1.9"/>
+      <path d="M9.25 4.25V19.75" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="5.1" y="5.8" width="2.8" height="12.4" rx="1.3" fill="currentColor"/>
     </svg>`;
 
   const expandedIcon = `
-    <svg viewBox="0 0 423 423" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M60.1667 405.5H146.5M60.1667 405.5H362.333C386.174 405.5 405.5 386.174 405.5 362.333V60.1667C405.5 36.3264 386.174 17 362.333 17H60.1667M60.1667 405.5C36.3264 405.5 17 386.174 17 362.333V60.1667C17 36.3264 36.3264 17 60.1667 17M60.1667 17H146.5" stroke="currentColor" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M161.25 405.75V211.5V17.25" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="43.25" y="42" width="96" height="339" rx="18" fill="currentColor" opacity="0.14"/>
-      <rect x="183" y="42" width="197" height="339" rx="18" fill="currentColor" opacity="0.14"/>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="wwdt-nav-icon">
+      <rect x="3" y="3" width="18" height="18" rx="3.6" stroke="currentColor" stroke-width="1.9"/>
+      <path d="M9.25 4.25V19.75" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="5.1" y="5.8" width="2.8" height="12.4" rx="1.3" fill="currentColor" opacity="0.28"/>
+      <rect x="11.15" y="5.8" width="7" height="12.4" rx="1.35" fill="currentColor" opacity="0.28"/>
     </svg>`;
 
   const bellIcon = `
-    <svg viewBox="0 0 274 343" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M17.125 291.125C12.273 291.125 8.20578 289.484 4.92344 286.202C1.64109 282.919 0 278.852 0 274C0 269.148 1.64109 265.081 4.92344 261.798C8.20578 258.516 12.273 256.875 17.125 256.875H34.25V137C34.25 113.31 41.3855 92.2609 55.6562 73.8516C69.927 55.4422 88.4792 43.3833 111.312 37.675V25.6875C111.312 18.552 113.809 12.487 118.805 7.49219C123.8 2.49734 129.864 0 137 0C144.136 0 150.2 2.49734 155.195 7.49219C160.191 12.487 162.688 18.552 162.688 25.6875V37.675C185.52 43.3833 204.073 55.4422 218.344 73.8516C232.614 92.2609 239.75 113.31 239.75 137V256.875H256.875C261.727 256.875 265.794 258.516 269.077 261.798C272.359 265.081 274 269.148 274 274C274 278.852 272.359 282.919 269.077 286.202C265.794 289.484 261.727 291.125 256.875 291.125H17.125ZM137 342.5C127.581 342.5 119.519 339.147 112.811 332.439C106.103 325.731 102.75 317.669 102.75 308.25H171.25C171.25 317.669 167.897 325.731 161.189 332.439C154.481 339.147 146.419 342.5 137 342.5ZM68.5 256.875H205.5V137C205.5 118.162 198.792 102.036 185.378 88.6219C171.964 75.2074 155.838 68.5 137 68.5C118.162 68.5 102.036 75.2074 88.6219 88.6219C75.2074 102.036 68.5 118.162 68.5 137V256.875Z" fill="currentColor"/>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="wwdt-nav-icon">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25C9.18 2.25 6.88 4.55 6.88 7.38V9.55C6.88 10.81 6.48 12.04 5.74 13.06L4.75 14.43C3.81 15.73 4.74 17.55 6.34 17.55H17.66C19.26 17.55 20.19 15.73 19.25 14.43L18.26 13.06C17.52 12.04 17.12 10.81 17.12 9.55V7.38C17.12 4.55 14.82 2.25 12 2.25ZM9.2 19.05C9.58 20.61 10.98 21.75 12.64 21.75C14.3 21.75 15.7 20.61 16.08 19.05H9.2Z" fill="currentColor"/>
     </svg>`;
 
   function chromeStorageGet(key) {
@@ -96,19 +96,97 @@
     window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: { soundUrl } }));
   }
 
-  function createNavButton(id, label, html, onClick) {
+  function cleanCloneIds(node) {
+    if (node instanceof Element) {
+      node.removeAttribute("id");
+      node.removeAttribute("data-testid");
+      node.removeAttribute("data-visualcompletion");
+      node.querySelectorAll("[id], [data-testid], [data-visualcompletion]").forEach((child) => {
+        child.removeAttribute("id");
+        child.removeAttribute("data-testid");
+        child.removeAttribute("data-visualcompletion");
+      });
+    }
+  }
+
+  function createFallbackNavButton(id, label) {
     const shell = document.createElement("span");
     shell.className = "wwdt-nav-shell";
 
+    const outer = document.createElement("div");
+    outer.className = "wwdt-nav-outer";
+
     const button = document.createElement("button");
-    button.id = id;
     button.type = "button";
     button.className = "wwdt-nav-button";
-    button.setAttribute("aria-label", label);
-    button.innerHTML = html;
-    button.addEventListener("click", onClick);
+    button.dataset.navbarItem = "true";
 
-    shell.appendChild(button);
+    const stack = document.createElement("div");
+    stack.className = "wwdt-nav-stack";
+
+    const row = document.createElement("div");
+    row.className = "wwdt-nav-row";
+
+    const iconSlot = document.createElement("div");
+    iconSlot.className = "wwdt-nav-icon-slot";
+
+    const iconFrame = document.createElement("span");
+    iconFrame.className = "wwdt-nav-icon-frame";
+    iconFrame.setAttribute("aria-hidden", "true");
+
+    iconSlot.appendChild(iconFrame);
+    row.appendChild(iconSlot);
+    stack.appendChild(row);
+    button.appendChild(stack);
+    outer.appendChild(button);
+    shell.appendChild(outer);
+    shell.appendChild(document.createElement("span")).className = "wwdt-selection-pill";
+
+    button.id = id;
+    button.setAttribute("aria-label", label);
+    return shell;
+  }
+
+  function createNavButton(id, label, html, onClick, referenceItem) {
+    let shell = referenceItem?.cloneNode(true) || createFallbackNavButton(id, label);
+    cleanCloneIds(shell);
+    shell.classList.add("wwdt-nav-shell");
+    shell.querySelectorAll("img, [role='status']").forEach((node) => node.remove());
+
+    let button = shell.querySelector("button");
+    if (!button) {
+      shell = createFallbackNavButton(id, label);
+      button = shell.querySelector("button");
+    }
+
+    button.id = id;
+    button.type = "button";
+    button.classList.add("wwdt-nav-button");
+    button.dataset.wwdtNav = id;
+    button.dataset.navbarItem = "true";
+    button.dataset.navbarItemSelected = "false";
+    button.removeAttribute("data-navbar-item-index");
+    button.removeAttribute("aria-disabled");
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", "false");
+    button.setAttribute("tabindex", "-1");
+
+    let iconFrame = shell.querySelector("span[aria-hidden='true']");
+    if (!iconFrame) {
+      iconFrame = document.createElement("span");
+      iconFrame.setAttribute("aria-hidden", "true");
+      button.prepend(iconFrame);
+    }
+    iconFrame.classList.add("wwdt-nav-icon-frame");
+    iconFrame.innerHTML = html;
+
+    if (!shell.querySelector(".wwdt-selection-pill")) {
+      const pill = document.createElement("span");
+      pill.className = "wwdt-selection-pill";
+      shell.appendChild(pill);
+    }
+
+    button.addEventListener("click", onClick);
     return shell;
   }
 
@@ -130,6 +208,7 @@
   function injectNavButtons() {
     if (document.getElementById(SIDEBAR_BUTTON_ID) && document.getElementById(NOTIFICATION_BUTTON_ID)) {
       updateSidebarButton();
+      updateNotificationButton(Boolean(document.querySelector(".wwdt-modal-backdrop")));
       return;
     }
 
@@ -141,7 +220,8 @@
         SIDEBAR_BUTTON_ID,
         settings.sidebarCollapsed ? "Mostrar lista de conversas" : "Ocultar lista de conversas",
         settings.sidebarCollapsed ? expandedIcon : collapsedIcon,
-        () => setSidebarCollapsed(!settings.sidebarCollapsed, true)
+        () => setSidebarCollapsed(!settings.sidebarCollapsed, true),
+        insertPoint
       );
       insertPoint.parentElement.insertBefore(sidebarButton, insertPoint);
     }
@@ -151,7 +231,8 @@
         NOTIFICATION_BUTTON_ID,
         "Som de notificação",
         bellIcon,
-        openNotificationModal
+        openNotificationModal,
+        insertPoint
       );
       insertPoint.parentElement.insertBefore(notificationButton, insertPoint);
     }
@@ -201,8 +282,24 @@
     const button = document.getElementById(SIDEBAR_BUTTON_ID);
     if (!button) return;
     button.setAttribute("aria-pressed", String(settings.sidebarCollapsed));
+    button.dataset.navbarItemSelected = String(settings.sidebarCollapsed);
     button.setAttribute("aria-label", settings.sidebarCollapsed ? "Mostrar lista de conversas" : "Ocultar lista de conversas");
-    button.innerHTML = settings.sidebarCollapsed ? expandedIcon : collapsedIcon;
+    const iconFrame = button.querySelector(".wwdt-nav-icon-frame");
+    if (iconFrame) {
+      iconFrame.innerHTML = settings.sidebarCollapsed ? expandedIcon : collapsedIcon;
+    } else {
+      button.innerHTML = settings.sidebarCollapsed ? expandedIcon : collapsedIcon;
+    }
+    const shell = button.closest(".wwdt-nav-shell");
+    shell?.classList.toggle("wwdt-nav-selected", settings.sidebarCollapsed);
+  }
+
+  function updateNotificationButton(selected) {
+    const button = document.getElementById(NOTIFICATION_BUTTON_ID);
+    if (!button) return;
+    button.setAttribute("aria-pressed", String(selected));
+    button.dataset.navbarItemSelected = String(selected);
+    button.closest(".wwdt-nav-shell")?.classList.toggle("wwdt-nav-selected", selected);
   }
 
   function selectSound(soundId) {
@@ -234,6 +331,7 @@
 
   function openNotificationModal() {
     closeNotificationModal();
+    updateNotificationButton(true);
 
     const backdrop = document.createElement("div");
     backdrop.className = "wwdt-modal-backdrop";
@@ -271,6 +369,7 @@
 
   function closeNotificationModal() {
     document.querySelector(".wwdt-modal-backdrop")?.remove();
+    updateNotificationButton(false);
   }
 
   function importCustomSound(event) {
