@@ -6,6 +6,7 @@
   const STORAGE_SOUND_URL = "wwdt.notificationSoundUrl";
   const SIDEBAR_BUTTON_ID = "wwdt-sidebar-toggle";
   const NOTIFICATION_BUTTON_ID = "wwdt-notification-button";
+  const SELECTION_CONTEXT_MENU_ID = "wwdt-selection-context-menu";
   const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
   const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
@@ -64,6 +65,12 @@
   const bellIcon = `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="wwdt-nav-icon">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25C9.18 2.25 6.88 4.55 6.88 7.38V9.55C6.88 10.81 6.48 12.04 5.74 13.06L4.75 14.43C3.81 15.73 4.74 17.55 6.34 17.55H17.66C19.26 17.55 20.19 15.73 19.25 14.43L18.26 13.06C17.52 12.04 17.12 10.81 17.12 9.55V7.38C17.12 4.55 14.82 2.25 12 2.25ZM9.2 19.05C9.58 20.61 10.98 21.75 12.64 21.75C14.3 21.75 15.7 20.61 16.08 19.05H9.2Z" fill="currentColor"/>
+    </svg>`;
+
+  const copyIcon = `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="wwdt-context-icon">
+      <rect x="8" y="8" width="10" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M6 16H5.8C4.81 16 4 15.19 4 14.2V5.8C4 4.81 4.81 4 5.8 4H13.2C14.19 4 15 4.81 15 5.8V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </svg>`;
 
   function chromeStorageGet(key) {
@@ -455,8 +462,152 @@
     reader.readAsDataURL(file);
   }
 
+  function closeSelectionContextMenu(event) {
+    if (event?.target instanceof Element && event.target.closest(`#${SELECTION_CONTEXT_MENU_ID}`)) return;
+    document.getElementById(SELECTION_CONTEXT_MENU_ID)?.remove();
+  }
+
+  function selectedConversationText() {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return "";
+
+    const text = selection.toString();
+    if (!text || !text.trim()) return "";
+
+    const range = selection.getRangeAt(0);
+    if (!isConversationSelection(range)) return "";
+
+    return text;
+  }
+
+  function isEditableElement(node) {
+    const element = node instanceof Element ? node : node?.parentElement;
+    return Boolean(element?.closest("input, textarea, [contenteditable='true'], [contenteditable='plaintext-only']"));
+  }
+
+  function isConversationNode(node) {
+    const element = node instanceof Element ? node : node?.parentElement;
+    if (!element || isEditableElement(element)) return false;
+
+    const conversationRoot = element.closest(
+      [
+        "#main",
+        "[data-testid='conversation-panel-wrapper']",
+        "[data-testid='conversation-panel-body']",
+        "[role='application']"
+      ].join(",")
+    );
+
+    if (!conversationRoot) return false;
+
+    const sidebarRoot = element.closest("#side, #pane-side, [data-testid='chat-list']");
+    return !sidebarRoot;
+  }
+
+  function isConversationSelection(range) {
+    const container =
+      range.commonAncestorContainer instanceof Element
+        ? range.commonAncestorContainer
+        : range.commonAncestorContainer.parentElement;
+
+    return isConversationNode(container);
+  }
+
+  async function copyTextToClipboard(text) {
+    if (!text) return false;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (_) {
+      return fallbackCopyText(text);
+    }
+  }
+
+  function fallbackCopyText(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.inset = "0 auto auto 0";
+    textarea.style.width = "1px";
+    textarea.style.height = "1px";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch (_) {
+      copied = false;
+    }
+
+    textarea.remove();
+    return copied;
+  }
+
+  function positionSelectionContextMenu(menu, x, y) {
+    const margin = 8;
+    const rect = menu.getBoundingClientRect();
+    const left = Math.min(Math.max(margin, x), window.innerWidth - rect.width - margin);
+    const top = Math.min(Math.max(margin, y), window.innerHeight - rect.height - margin);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+  }
+
+  function openSelectionContextMenu(event, text) {
+    closeSelectionContextMenu();
+
+    const menu = document.createElement("div");
+    menu.id = SELECTION_CONTEXT_MENU_ID;
+    menu.className = "wwdt-context-menu";
+    menu.setAttribute("role", "menu");
+    menu.setAttribute("aria-label", "Texto selecionado");
+
+    const copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.className = "wwdt-context-item";
+    copyButton.setAttribute("role", "menuitem");
+    copyButton.innerHTML = `${copyIcon}<span>Copiar</span>`;
+    copyButton.addEventListener("click", async () => {
+      await copyTextToClipboard(text);
+      closeSelectionContextMenu();
+    });
+
+    menu.appendChild(copyButton);
+    document.body.appendChild(menu);
+    positionSelectionContextMenu(menu, event.clientX, event.clientY);
+    copyButton.focus({ preventScroll: true });
+  }
+
+  function handleSelectionContextMenu(event) {
+    if (!(event.target instanceof Node)) return false;
+    if (event.target instanceof Element && event.target.closest(`#${SELECTION_CONTEXT_MENU_ID}`)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return true;
+    }
+    if (!isConversationNode(event.target)) return false;
+
+    const text = selectedConversationText();
+    if (!text) return false;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openSelectionContextMenu(event, text);
+    return true;
+  }
+
   function blockChromiumShortcut(event) {
     const key = event.key.toLowerCase();
+
+    if (event.key === "Escape") {
+      closeSelectionContextMenu();
+    }
 
     if (event.ctrlKey && event.shiftKey && key === "s") {
       event.preventDefault();
@@ -478,6 +629,8 @@
 
   function suppressChromiumContextMenu(event) {
     if (event.target instanceof Element && event.target.closest(".wwdt-modal-backdrop")) return;
+    if (handleSelectionContextMenu(event)) return;
+    closeSelectionContextMenu();
     event.preventDefault();
   }
 
@@ -572,6 +725,9 @@
   if (!devtoolsMode) {
     document.addEventListener("keydown", blockChromiumShortcut, true);
     document.addEventListener("contextmenu", suppressChromiumContextMenu, true);
+    document.addEventListener("click", closeSelectionContextMenu, true);
+    document.addEventListener("scroll", closeSelectionContextMenu, true);
+    window.addEventListener("resize", closeSelectionContextMenu, true);
     enableExternalLinkHandling();
   }
 
