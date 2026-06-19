@@ -17,6 +17,12 @@
     manifest.permissions.includes("nativeMessaging") &&
     Boolean(manifest.background?.service_worker);
 
+  const SYSTEM_DEFAULT_SOUND = {
+    id: "system_default",
+    name: "Padrão do Sistema",
+    url: ""
+  };
+
   const BUILTIN_SOUNDS = [
     {
       id: "whatsapp_1",
@@ -32,7 +38,7 @@
 
   const DEFAULT_SETTINGS = {
     sidebarCollapsed: false,
-    selectedSoundId: "whatsapp_2",
+    selectedSoundId: SYSTEM_DEFAULT_SOUND.id,
     customSounds: []
   };
 
@@ -77,6 +83,9 @@
       ...(stored && typeof stored === "object" ? stored : {})
     };
     settings.customSounds = Array.isArray(settings.customSounds) ? settings.customSounds : [];
+    if (!allSounds().some((sound) => sound.id === settings.selectedSoundId)) {
+      settings.selectedSoundId = SYSTEM_DEFAULT_SOUND.id;
+    }
     syncPageHook();
     setSidebarCollapsed(settings.sidebarCollapsed);
   }
@@ -87,11 +96,11 @@
   }
 
   function allSounds() {
-    return [...BUILTIN_SOUNDS, ...settings.customSounds];
+    return [...BUILTIN_SOUNDS, ...settings.customSounds, SYSTEM_DEFAULT_SOUND];
   }
 
   function selectedSound() {
-    return allSounds().find((sound) => sound.id === settings.selectedSoundId) || BUILTIN_SOUNDS[1];
+    return allSounds().find((sound) => sound.id === settings.selectedSoundId) || SYSTEM_DEFAULT_SOUND;
   }
 
   function syncPageHook() {
