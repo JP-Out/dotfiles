@@ -54,8 +54,9 @@
   background: @cc-bg;
   border: 2px solid @border-dark-blue;
   margin: -2px -2px 0px 0;
-  min-width: 380px;           /* não fica estreito demais */
-  width: auto;  
+  min-width: 320px;
+  max-width: 420px;
+  width: auto;
 }
 
 .notification-row:hover .notification .notification-content {
@@ -152,6 +153,8 @@
   background: transparent;
   color: @text-color;
   text-shadow: none;
+  opacity: 0.92;
+  -gtk-line-clamp: 2;
 }
 
 .summary,
