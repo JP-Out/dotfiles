@@ -69,8 +69,8 @@
 
   const copyIcon = `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="wwdt-context-icon">
-      <rect x="8" y="8" width="10" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>
-      <path d="M6 16H5.8C4.81 16 4 15.19 4 14.2V5.8C4 4.81 4.81 4 5.8 4H13.2C14.19 4 15 4.81 15 5.8V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="8.25" y="7.25" width="9.5" height="12.5" rx="1.6" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M5.75 16.25H5.5C4.67 16.25 4 15.58 4 14.75V5.5C4 4.67 4.67 4 5.5 4H13.25C14.08 4 14.75 4.67 14.75 5.5V5.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
     </svg>`;
 
   function chromeStorageGet(key) {
