@@ -5,6 +5,9 @@
   const SETTINGS_EVENT = "wwdt:settings";
   const NOTIFICATION_HINT_EVENT = "wwdt:notification-hint";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
+  const EXTERNAL_LINK_LOG_EVENT = "wwdt:external-link-log";
+  const EXTERNAL_LINK_URL_ATTR = "data-wwdt-external-link-url";
+  const EXTERNAL_LINK_LOG_ATTR = "data-wwdt-external-link-log";
   const CUSTOM_AUDIO_MARK = "wwdtCustomNotificationSound";
   const NOTIFICATION_AUDIO_GRACE_MS = 1200;
   const NOTIFICATION_FALLBACK_SOUND_MS = 180;
@@ -113,7 +116,11 @@
   }
 
   function requestExternalLinkOpen(url) {
-    window.dispatchEvent(new CustomEvent(EXTERNAL_LINK_REQUEST_EVENT, { detail: url }));
+    const root = document.documentElement;
+    root.setAttribute(EXTERNAL_LINK_LOG_ATTR, JSON.stringify({ event: "page-window-open", url }));
+    root.setAttribute(EXTERNAL_LINK_URL_ATTR, url);
+    document.dispatchEvent(new Event(EXTERNAL_LINK_LOG_EVENT));
+    document.dispatchEvent(new Event(EXTERNAL_LINK_REQUEST_EVENT));
   }
 
   window.open = function patchedWindowOpen(url) {
