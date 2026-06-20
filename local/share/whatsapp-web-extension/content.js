@@ -4,6 +4,7 @@
   const STORAGE_KEY = "wwdt.settings";
   const SETTINGS_EVENT = "wwdt:settings";
   const STORAGE_SOUND_URL = "wwdt.notificationSoundUrl";
+  const NOTIFICATION_HINT_EVENT = "wwdt:notification-hint";
   const SIDEBAR_BUTTON_ID = "wwdt-sidebar-toggle";
   const NOTIFICATION_BUTTON_ID = "wwdt-notification-button";
   const SELECTION_CONTEXT_MENU_ID = "wwdt-selection-context-menu";
@@ -17,6 +18,8 @@
     Array.isArray(manifest.permissions) &&
     manifest.permissions.includes("nativeMessaging") &&
     Boolean(manifest.background?.service_worker);
+  const UNREAD_WARMUP_MS = 10000;
+  const UNREAD_SOUND_COOLDOWN_MS = 1200;
 
   const SYSTEM_DEFAULT_SOUND = {
     id: "system_default",
@@ -45,6 +48,10 @@
 
   let settings = { ...DEFAULT_SETTINGS };
   let mutationScheduled = false;
+  let scriptStartedAt = Date.now();
+  let unreadBaselineReady = false;
+  let lastUnreadCount = 0;
+  let lastUnreadSoundAt = 0;
   let sidebarTarget = null;
 
   const collapsedIcon = `
@@ -119,6 +126,47 @@
       window.localStorage.removeItem(STORAGE_SOUND_URL);
     }
     window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: { soundUrl } }));
+  }
+
+  function selectedSoundUrl() {
+    return selectedSound()?.url || "";
+  }
+
+  function parseUnreadCount() {
+    const titleMatch = document.title.match(/^\((\d+)\)\s+/);
+    if (titleMatch) return Number.parseInt(titleMatch[1], 10) || 0;
+    return 0;
+  }
+
+  function shouldPlayUnreadNotificationSound(nextUnreadCount) {
+    if (!selectedSoundUrl()) return false;
+    if (!unreadBaselineReady) return false;
+    if (Date.now() - scriptStartedAt < UNREAD_WARMUP_MS) return false;
+    if (document.hasFocus()) return false;
+    if (nextUnreadCount <= lastUnreadCount) return false;
+    if (Date.now() - lastUnreadSoundAt < UNREAD_SOUND_COOLDOWN_MS) return false;
+    return true;
+  }
+
+  function notifyPageHookAboutUnread() {
+    lastUnreadSoundAt = Date.now();
+    window.dispatchEvent(new CustomEvent(NOTIFICATION_HINT_EVENT));
+  }
+
+  function refreshUnreadNotificationState() {
+    const nextUnreadCount = parseUnreadCount();
+
+    if (!unreadBaselineReady) {
+      lastUnreadCount = nextUnreadCount;
+      unreadBaselineReady = true;
+      return;
+    }
+
+    if (shouldPlayUnreadNotificationSound(nextUnreadCount)) {
+      notifyPageHookAboutUnread();
+    }
+
+    lastUnreadCount = nextUnreadCount;
   }
 
   function cleanCloneIds(node) {
@@ -719,6 +767,7 @@
       mutationScheduled = false;
       injectNavButtons();
       setSidebarCollapsed(settings.sidebarCollapsed);
+      refreshUnreadNotificationState();
     });
   }
 
@@ -733,9 +782,11 @@
 
   const observer = new MutationObserver(scheduleRefresh);
   observer.observe(document.documentElement, { childList: true, subtree: true });
+  window.setInterval(refreshUnreadNotificationState, 500);
 
   loadSettings().then(() => {
     injectNavButtons();
     setSidebarCollapsed(settings.sidebarCollapsed);
+    refreshUnreadNotificationState();
   });
 })();
