@@ -59,6 +59,7 @@
   let unreadBaselineReady = false;
   let lastUnreadCount = 0;
   let lastUnreadSoundAt = 0;
+  let lastUnreadSystemNotificationAt = 0;
   let lastSystemNotificationKey = "";
   let lastSystemNotificationAt = 0;
   const handledSystemNotificationEvents = new WeakSet();
@@ -158,9 +159,30 @@
     return true;
   }
 
+  function shouldSendUnreadSystemNotification(nextUnreadCount) {
+    if (!unreadBaselineReady) return false;
+    if (Date.now() - scriptStartedAt < UNREAD_WARMUP_MS) return false;
+    if (document.hasFocus()) return false;
+    if (nextUnreadCount <= lastUnreadCount) return false;
+    if (Date.now() - lastUnreadSystemNotificationAt < UNREAD_SOUND_COOLDOWN_MS) return false;
+    return true;
+  }
+
   function notifyPageHookAboutUnread() {
     lastUnreadSoundAt = Date.now();
     window.dispatchEvent(new CustomEvent(NOTIFICATION_HINT_EVENT));
+  }
+
+  function notifySystemAboutUnread(nextUnreadCount) {
+    lastUnreadSystemNotificationAt = Date.now();
+    handleSystemNotificationRequest({
+      detail: {
+        source: "unread-count",
+        title: "WhatsApp",
+        body: "Nova mensagem recebida",
+        tag: `unread-${nextUnreadCount}`
+      }
+    });
   }
 
   function truncateText(value, maxLength) {
@@ -247,6 +269,10 @@
 
     if (shouldPlayUnreadNotificationSound(nextUnreadCount)) {
       notifyPageHookAboutUnread();
+    }
+
+    if (shouldSendUnreadSystemNotification(nextUnreadCount)) {
+      notifySystemAboutUnread(nextUnreadCount);
     }
 
     lastUnreadCount = nextUnreadCount;
