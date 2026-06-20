@@ -5,7 +5,6 @@
   const SETTINGS_EVENT = "wwdt:settings";
   const NOTIFICATION_HINT_EVENT = "wwdt:notification-hint";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
-  const EXTERNAL_LINK_BRIDGE_ATTR = "data-wwdt-external-link-bridge";
   const CUSTOM_AUDIO_MARK = "wwdtCustomNotificationSound";
   const NOTIFICATION_AUDIO_GRACE_MS = 1200;
   const NOTIFICATION_FALLBACK_SOUND_MS = 180;
@@ -117,13 +116,9 @@
     window.dispatchEvent(new CustomEvent(EXTERNAL_LINK_REQUEST_EVENT, { detail: url }));
   }
 
-  function externalLinkBridgeReady() {
-    return document.documentElement?.getAttribute(EXTERNAL_LINK_BRIDGE_ATTR) === "1";
-  }
-
   window.open = function patchedWindowOpen(url) {
     const href = externalHttpUrl(url);
-    if (href && externalLinkBridgeReady()) {
+    if (href) {
       requestExternalLinkOpen(href);
       return null;
     }
