@@ -4,6 +4,8 @@
   const STORAGE_SOUND_URL = "wwdt.notificationSoundUrl";
   const SETTINGS_EVENT = "wwdt:settings";
   const NOTIFICATION_HINT_EVENT = "wwdt:notification-hint";
+  const SYSTEM_NOTIFICATION_EVENT = "wwdt:system-notification";
+  const SYSTEM_NOTIFICATION_ATTR = "data-wwdt-system-notification";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
   const EXTERNAL_LINK_LOG_EVENT = "wwdt:external-link-log";
   const EXTERNAL_LINK_URL_ATTR = "data-wwdt-external-link-url";
@@ -37,6 +39,59 @@
   window.addEventListener(NOTIFICATION_HINT_EVENT, () => {
     scheduleNotificationSound();
   });
+
+  function textValue(value, fallback = "") {
+    return typeof value === "string" ? value : fallback;
+  }
+
+  function requestSystemNotification(title, options = {}, source = "unknown") {
+    const payload = {
+      source,
+      title: textValue(title, "WhatsApp"),
+      body: textValue(options?.body, ""),
+      tag: textValue(options?.tag, ""),
+      icon: textValue(options?.icon, "")
+    };
+
+    document.documentElement.setAttribute(SYSTEM_NOTIFICATION_ATTR, JSON.stringify(payload));
+    document.documentElement.dispatchEvent(new CustomEvent(SYSTEM_NOTIFICATION_EVENT, { detail: payload }));
+  }
+
+  function systemNotificationBridgeReady() {
+    return document.documentElement.getAttribute("data-wwdt-system-notification-bridge") === "1";
+  }
+
+  function createSuppressedNotification(title, options = {}) {
+    const notification = new EventTarget();
+    if (window.Notification?.prototype) {
+      Object.setPrototypeOf(notification, window.Notification.prototype);
+    }
+    Object.defineProperties(notification, {
+      title: { value: textValue(title, "WhatsApp"), enumerable: true },
+      body: { value: textValue(options?.body, ""), enumerable: true },
+      tag: { value: textValue(options?.tag, ""), enumerable: true },
+      icon: { value: textValue(options?.icon, ""), enumerable: true },
+      data: { value: options?.data, enumerable: true },
+      dir: { value: textValue(options?.dir, "auto"), enumerable: true },
+      lang: { value: textValue(options?.lang, ""), enumerable: true },
+      requireInteraction: { value: Boolean(options?.requireInteraction), enumerable: true },
+      silent: { value: Boolean(options?.silent), enumerable: true },
+      timestamp: { value: Number(options?.timestamp) || Date.now(), enumerable: true },
+      onclick: { value: null, writable: true },
+      onclose: { value: null, writable: true },
+      onerror: { value: null, writable: true },
+      onshow: { value: null, writable: true }
+    });
+    notification.close = function close() {
+      this.dispatchEvent(new Event("close"));
+      if (typeof this.onclose === "function") this.onclose(new Event("close"));
+    };
+    setTimeout(() => {
+      notification.dispatchEvent(new Event("show"));
+      if (typeof notification.onshow === "function") notification.onshow(new Event("show"));
+    }, 0);
+    return notification;
+  }
 
   function isUserControlledAudio(media) {
     if (media.controls || media.loop) return true;
@@ -135,13 +190,18 @@
 
   if (typeof NativeNotification === "function") {
     function PatchedNotification() {
-      const notification = Reflect.construct(NativeNotification, arguments, new.target || PatchedNotification);
       scheduleNotificationSound();
+      if (systemNotificationBridgeReady()) {
+        requestSystemNotification(arguments[0], arguments[1], "Notification");
+        return createSuppressedNotification(arguments[0], arguments[1]);
+      }
+      const notification = Reflect.construct(NativeNotification, arguments, new.target || PatchedNotification);
       return notification;
     }
 
     Object.setPrototypeOf(PatchedNotification, NativeNotification);
-    PatchedNotification.prototype = NativeNotification.prototype;
+    PatchedNotification.prototype = Object.create(EventTarget.prototype);
+    PatchedNotification.prototype.constructor = PatchedNotification;
     Object.defineProperty(PatchedNotification, "permission", {
       configurable: true,
       enumerable: true,
@@ -155,9 +215,12 @@
 
   if (nativeShowNotification && window.ServiceWorkerRegistration?.prototype) {
     window.ServiceWorkerRegistration.prototype.showNotification = function patchedShowNotification() {
-      const result = nativeShowNotification.apply(this, arguments);
       scheduleNotificationSound();
-      return result;
+      if (systemNotificationBridgeReady()) {
+        requestSystemNotification(arguments[0], arguments[1], "showNotification");
+        return Promise.resolve();
+      }
+      return nativeShowNotification.apply(this, arguments);
     };
   }
 

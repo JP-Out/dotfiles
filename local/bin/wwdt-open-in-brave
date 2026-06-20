@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 
 LOG_PATH = os.path.expanduser("~/.local/state/whatsapp-web-chromium/link-open.log")
+WHATSAPP_ICON = os.path.expanduser("~/.local/share/icons/whatsapp.svg")
 
 
 def log_event(event, **data):
@@ -64,6 +65,65 @@ def launch_url(url):
     return True, None
 
 
+def truncate_text(value, max_length):
+    if not isinstance(value, str):
+        return ""
+    text = " ".join(value.split())
+    if len(text) <= max_length:
+        return text
+    return text[: max_length - 1].rstrip() + "…"
+
+
+def send_system_notification(notification):
+    if not isinstance(notification, dict):
+        log_event("native-notification-invalid")
+        return {"ok": False, "error": "Invalid notification"}
+
+    title = truncate_text(notification.get("title") or "WhatsApp", 80)
+    body = truncate_text(notification.get("body") or "", 160)
+    if not title and not body:
+        log_event("native-notification-empty")
+        return {"ok": False, "error": "Empty notification"}
+
+    notifier = shutil.which("notify-send")
+    if not notifier:
+        log_event("native-notification-failed", error="notify-send not found")
+        return {"ok": False, "error": "notify-send not found"}
+
+    command = [
+        notifier,
+        "-a",
+        "WhatsApp",
+        "-u",
+        "normal",
+        "-t",
+        "7000",
+    ]
+
+    if os.path.exists(WHATSAPP_ICON):
+        command.extend(["-i", WHATSAPP_ICON])
+
+    command.extend([title, body])
+
+    log_event(
+        "native-notification-command",
+        source=notification.get("source"),
+        title_len=len(title),
+        body_len=len(body),
+        command=[command[0], *command[1:8], "..."],
+    )
+    process = subprocess.Popen(
+        command,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        close_fds=True,
+    )
+    log_event("native-notification-spawned", pid=process.pid)
+    return {"ok": True}
+
+
 def read_native_message():
     raw_length = sys.stdin.buffer.read(4)
     if len(raw_length) != 4:
@@ -89,7 +149,20 @@ def handle_url(url):
 
 
 def handle_message(message):
-    log_event("native-message", message=message)
+    if isinstance(message, dict) and "notification" in message:
+        notification = message.get("notification")
+        log_event(
+            "native-message",
+            message={
+                "notification": {
+                    "source": notification.get("source") if isinstance(notification, dict) else None,
+                    "title_len": len(notification.get("title", "")) if isinstance(notification, dict) else 0,
+                    "body_len": len(notification.get("body", "")) if isinstance(notification, dict) else 0,
+                }
+            },
+        )
+    else:
+        log_event("native-message", message=message)
     if isinstance(message, dict) and message.get("ping") is True:
         browser = find_browser()
         log_event("native-ping", browser=browser)
@@ -102,6 +175,9 @@ def handle_message(message):
     if "log" in message:
         log_event("extension-log", payload=message.get("log"))
         return {"ok": True}
+
+    if "notification" in message:
+        return send_system_notification(message.get("notification"))
 
     return handle_url(message.get("url"))
 

@@ -2,6 +2,7 @@ const NATIVE_HOST = "com.shaka.wwdt_brave";
 const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
 const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
 const LOG_EXTERNAL_LINK = "wwdt:log-external-link";
+const SEND_SYSTEM_NOTIFICATION = "wwdt:send-system-notification";
 
 function isExternalHttpUrl(value) {
   try {
@@ -57,6 +58,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     logExternalLink(message.event || "unknown", message.data || {});
     sendResponse({ ok: true });
     return;
+  }
+
+  if (message.type === SEND_SYSTEM_NOTIFICATION) {
+    const notification = message.notification || {};
+    sendNativeMessage({ notification }, (response) => {
+      sendResponse(response);
+      logExternalLink("service-worker-notification-response", {
+        source: notification.source,
+        titleLength: typeof notification.title === "string" ? notification.title.length : 0,
+        bodyLength: typeof notification.body === "string" ? notification.body.length : 0,
+        response
+      });
+    });
+    return true;
   }
 
   if (message.type === PING_EXTERNAL_LINK_HOST) {

@@ -8,6 +8,7 @@ chromium_extra_args=""
 extension_dir="$HOME/.local/share/whatsapp-web-extension"
 native_host_name="com.shaka.wwdt_brave"
 legacy_extension_id="pegillnacjhfdokcfpieidpbbknaaghh"
+extension_id="cdfllcdhkhafoplikbchoedlapjbfakn"
 extension_args=""
 start_hidden="0"
 if [ -d "$extension_dir" ]; then
@@ -108,6 +109,43 @@ cleanup_legacy_extension_state() {
 	rm -rf "${default_dir}/Local Extension Settings/${legacy_extension_id}"
 }
 
+cleanup_extension_runtime_cache() {
+	default_dir="${profile_dir}/Default"
+	manifest_file="${extension_dir}/manifest.json"
+	preferences_file="${default_dir}/Preferences"
+
+	if ! command -v jq >/dev/null 2>&1 || [ ! -f "$manifest_file" ] || [ ! -f "$preferences_file" ]; then
+		return
+	fi
+
+	manifest_version="$(jq -r '.version // empty' "$manifest_file" 2>/dev/null || printf '')"
+	registered_version="$(jq -r --arg id "$extension_id" '.extensions.settings[$id].service_worker_registration_info.version // empty' "$preferences_file" 2>/dev/null || printf '')"
+
+	if [ -z "$manifest_version" ] || [ "$registered_version" = "$manifest_version" ]; then
+		return
+	fi
+
+	for state_file in "${default_dir}/Preferences" "${default_dir}/Secure Preferences"; do
+		[ -f "$state_file" ] || continue
+
+		tmp_file="${state_file}.wwdt.$$"
+		if jq --arg id "$extension_id" '
+			if (.extensions? and .extensions.settings? and .extensions.settings[$id]?) then
+				del(.extensions.settings[$id].service_worker_registration_info)
+				| .extensions.settings[$id].has_started_service_worker = false
+			else
+				.
+			end
+		' "$state_file" > "$tmp_file"; then
+			mv "$tmp_file" "$state_file"
+		else
+			rm -f "$tmp_file"
+		fi
+	done
+
+	rm -rf "${default_dir}/Extension Scripts" "${default_dir}/Service Worker/ScriptCache"
+}
+
 launch_chromium() {
 	if command -v setsid >/dev/null 2>&1; then
 		setsid -f /usr/bin/chromium \
@@ -205,6 +243,7 @@ fi
 
 install_native_messaging_host
 cleanup_legacy_extension_state
+cleanup_extension_runtime_cache
 launch_chromium
 
 if [ "$start_hidden" = "0" ] && [ -S "$socket" ] && command -v nc >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && is_hyprland; then

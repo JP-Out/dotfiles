@@ -5,12 +5,15 @@
   const SETTINGS_EVENT = "wwdt:settings";
   const STORAGE_SOUND_URL = "wwdt.notificationSoundUrl";
   const NOTIFICATION_HINT_EVENT = "wwdt:notification-hint";
+  const SYSTEM_NOTIFICATION_EVENT = "wwdt:system-notification";
+  const SYSTEM_NOTIFICATION_ATTR = "data-wwdt-system-notification";
   const SIDEBAR_BUTTON_ID = "wwdt-sidebar-toggle";
   const NOTIFICATION_BUTTON_ID = "wwdt-notification-button";
   const SELECTION_CONTEXT_MENU_ID = "wwdt-selection-context-menu";
   const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
   const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
   const LOG_EXTERNAL_LINK = "wwdt:log-external-link";
+  const SEND_SYSTEM_NOTIFICATION = "wwdt:send-system-notification";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
   const EXTERNAL_LINK_LOG_EVENT = "wwdt:external-link-log";
   const EXTERNAL_LINK_BRIDGE_ATTR = "data-wwdt-external-link-bridge";
@@ -56,6 +59,9 @@
   let unreadBaselineReady = false;
   let lastUnreadCount = 0;
   let lastUnreadSoundAt = 0;
+  let lastSystemNotificationKey = "";
+  let lastSystemNotificationAt = 0;
+  const handledSystemNotificationEvents = new WeakSet();
   let sidebarTarget = null;
 
   const collapsedIcon = `
@@ -155,6 +161,79 @@
   function notifyPageHookAboutUnread() {
     lastUnreadSoundAt = Date.now();
     window.dispatchEvent(new CustomEvent(NOTIFICATION_HINT_EVENT));
+  }
+
+  function truncateText(value, maxLength) {
+    const text = typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+  }
+
+  function shouldSkipDuplicateSystemNotification(payload, title, body) {
+    const now = Date.now();
+    const key = JSON.stringify({
+      title,
+      body,
+      tag: payload.tag || ""
+    });
+    if (key === lastSystemNotificationKey && now - lastSystemNotificationAt < 1200) {
+      return true;
+    }
+    lastSystemNotificationKey = key;
+    lastSystemNotificationAt = now;
+    return false;
+  }
+
+  function handleSystemNotificationRequest(event) {
+    if (event && handledSystemNotificationEvents.has(event)) return;
+    if (event) handledSystemNotificationEvents.add(event);
+
+    let payload = {};
+    if (event?.detail && typeof event.detail === "object") {
+      payload = event.detail;
+    } else {
+      try {
+        payload = JSON.parse(document.documentElement.getAttribute(SYSTEM_NOTIFICATION_ATTR) || "{}");
+      } catch (_) {
+        payload = {};
+      }
+    }
+    document.documentElement.removeAttribute(SYSTEM_NOTIFICATION_ATTR);
+
+    const title = truncateText(payload.title || "WhatsApp", 80);
+    const body = truncateText(payload.body || "", 160);
+    if (!title && !body) return;
+    if (shouldSkipDuplicateSystemNotification(payload, title, body)) return;
+
+    logExternalLink("content-notification-request", {
+      source: payload.source || "unknown",
+      titleLength: title.length,
+      bodyLength: body.length,
+      tag: payload.tag ? "present" : ""
+    });
+
+    chrome.runtime.sendMessage({
+      type: SEND_SYSTEM_NOTIFICATION,
+      notification: {
+        title,
+        body,
+        source: payload.source || "unknown",
+        tag: payload.tag || ""
+      }
+    }, (response) => {
+      if (chrome.runtime.lastError || !response?.ok) {
+        console.warn("WWDT: failed to send system notification", chrome.runtime.lastError?.message || response);
+        logExternalLink("content-notification-failed", {
+          source: payload.source || "unknown",
+          error: chrome.runtime.lastError?.message || response?.error || "unknown error"
+        });
+        return;
+      }
+      logExternalLink("content-notification-ok", {
+        source: payload.source || "unknown",
+        response
+      });
+    });
   }
 
   function refreshUnreadNotificationState() {
@@ -790,6 +869,14 @@
     });
   }
 
+  function enableSystemNotificationHandling() {
+    document.documentElement.setAttribute("data-wwdt-content-version", manifest.version || "unknown");
+    document.documentElement.setAttribute("data-wwdt-system-notification-bridge", "1");
+    document.addEventListener(SYSTEM_NOTIFICATION_EVENT, handleSystemNotificationRequest, true);
+    document.documentElement.addEventListener(SYSTEM_NOTIFICATION_EVENT, handleSystemNotificationRequest, true);
+    window.addEventListener(SYSTEM_NOTIFICATION_EVENT, handleSystemNotificationRequest, true);
+  }
+
   function escapeHtml(value) {
     const span = document.createElement("span");
     span.textContent = value;
@@ -810,6 +897,7 @@
   if (!devtoolsMode) {
     document.addEventListener("keydown", blockChromiumShortcut, true);
     document.addEventListener("contextmenu", suppressChromiumContextMenu, true);
+    enableSystemNotificationHandling();
     document.addEventListener("click", closeSelectionContextMenu, true);
     document.addEventListener("scroll", closeSelectionContextMenu, true);
     window.addEventListener("resize", closeSelectionContextMenu, true);
