@@ -3,6 +3,7 @@
 
   const STORAGE_SOUND_URL = "wwdt.notificationSoundUrl";
   const SETTINGS_EVENT = "wwdt:settings";
+  const NOTIFICATION_HINT_EVENT = "wwdt:notification-hint";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
   const EXTERNAL_LINK_BRIDGE_ATTR = "data-wwdt-external-link-bridge";
   const CUSTOM_AUDIO_MARK = "wwdtCustomNotificationSound";
@@ -31,6 +32,10 @@
     }
   });
 
+  window.addEventListener(NOTIFICATION_HINT_EVENT, () => {
+    scheduleNotificationSound();
+  });
+
   function isUserControlledAudio(media) {
     if (media.controls || media.loop) return true;
     if (Number.isFinite(media.duration) && media.duration > 7) return true;
@@ -51,7 +56,6 @@
 
   function shouldReplaceNotificationAudio(media) {
     if (!notificationSoundUrl) return false;
-    if (Date.now() > notificationAudioUntil) return false;
     if (!(media instanceof HTMLAudioElement)) return false;
     if (media.dataset && media.dataset[CUSTOM_AUDIO_MARK] === "1") return false;
     if (isUserControlledAudio(media)) return false;
@@ -59,7 +63,12 @@
     const src = media.currentSrc || media.src || "";
     if (src.startsWith("chrome-extension://")) return false;
 
-    return true;
+    const hintedNotificationAudio = Date.now() <= notificationAudioUntil;
+    const unfocusedShortAudio =
+      !document.hasFocus() &&
+      (!Number.isFinite(media.duration) || media.duration <= 4);
+
+    return hintedNotificationAudio || unfocusedShortAudio;
   }
 
   function playReplacementSound() {
