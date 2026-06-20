@@ -7,7 +7,7 @@ import sys
 
 
 def find_browser():
-    for candidate in ("xdg-open", "brave", "brave-browser"):
+    for candidate in ("brave", "brave-browser", "xdg-open"):
         path = shutil.which(candidate)
         if path:
             return path

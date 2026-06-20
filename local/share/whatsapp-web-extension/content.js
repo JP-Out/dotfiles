@@ -741,16 +741,14 @@
       return;
     }
 
+    setExternalLinkBridgeReady(true);
+    document.addEventListener("click", handleExternalLinkClick, true);
+    window.addEventListener(EXTERNAL_LINK_REQUEST_EVENT, handleExternalLinkRequest, true);
+
     chrome.runtime.sendMessage({ type: PING_EXTERNAL_LINK_HOST }, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        setExternalLinkBridgeReady(false);
         console.warn("WWDT: external link bridge is not available", chrome.runtime.lastError || response);
-        return;
       }
-
-      setExternalLinkBridgeReady(true);
-      document.addEventListener("click", handleExternalLinkClick, true);
-      window.addEventListener(EXTERNAL_LINK_REQUEST_EVENT, handleExternalLinkRequest, true);
     });
   }
 
