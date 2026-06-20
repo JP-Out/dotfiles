@@ -10,8 +10,12 @@
   const SELECTION_CONTEXT_MENU_ID = "wwdt-selection-context-menu";
   const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
   const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
+  const LOG_EXTERNAL_LINK = "wwdt:log-external-link";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
+  const EXTERNAL_LINK_LOG_EVENT = "wwdt:external-link-log";
   const EXTERNAL_LINK_BRIDGE_ATTR = "data-wwdt-external-link-bridge";
+  const EXTERNAL_LINK_URL_ATTR = "data-wwdt-external-link-url";
+  const EXTERNAL_LINK_LOG_ATTR = "data-wwdt-external-link-log";
   const devtoolsMode = new URLSearchParams(window.location.search).get("wwdt-devtools") === "1";
   const manifest = chrome.runtime.getManifest();
   const canHandleExternalLinks =
@@ -701,30 +705,56 @@
     return anchor;
   }
 
-  function openExternalLink(url) {
-    chrome.runtime.sendMessage({ type: OPEN_EXTERNAL_LINK, url }, (response) => {
+  function logExternalLink(event, data = {}) {
+    chrome.runtime.sendMessage({ type: LOG_EXTERNAL_LINK, event, data }, () => {});
+  }
+
+  function openExternalLink(url, source) {
+    logExternalLink("content-open-request", { source, url });
+    chrome.runtime.sendMessage({ type: OPEN_EXTERNAL_LINK, url, source }, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        console.warn("WWDT: failed to open external link in default browser", chrome.runtime.lastError || response);
+        const error = chrome.runtime.lastError?.message || response?.error || "unknown error";
+        console.warn("WWDT: failed to open external link in Brave", error, response);
+        logExternalLink("content-open-failed", { source, url, error, response });
+        return;
       }
+      logExternalLink("content-open-ok", { source, url, response });
     });
   }
 
   function handleExternalLinkClick(event) {
     if (event.defaultPrevented) return;
-    if (event.button !== 0) return;
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    if (event.button !== 0 && event.button !== 1) return;
 
     const anchor = findExternalAnchor(event.target);
     if (!anchor) return;
 
     event.preventDefault();
     event.stopImmediatePropagation();
-    openExternalLink(anchor.href);
+    openExternalLink(anchor.href, `dom-${event.type}`);
   }
 
   function handleExternalLinkRequest(event) {
-    if (typeof event.detail !== "string") return;
-    openExternalLink(event.detail);
+    const url = typeof event.detail === "string"
+      ? event.detail
+      : document.documentElement.getAttribute(EXTERNAL_LINK_URL_ATTR);
+    if (typeof url !== "string" || !url) return;
+    document.documentElement.removeAttribute(EXTERNAL_LINK_URL_ATTR);
+    openExternalLink(url, "window-open");
+  }
+
+  function handleExternalLinkLog(event) {
+    let detail = event.detail || {};
+    if (!event.detail) {
+      try {
+        detail = JSON.parse(document.documentElement.getAttribute(EXTERNAL_LINK_LOG_ATTR) || "{}");
+      } catch (_) {
+        detail = {};
+      }
+      document.documentElement.removeAttribute(EXTERNAL_LINK_LOG_ATTR);
+    }
+    if (!detail.event) return;
+    logExternalLink(detail.event || "page-log", detail);
   }
 
   function setExternalLinkBridgeReady(ready) {
@@ -743,12 +773,20 @@
 
     setExternalLinkBridgeReady(true);
     document.addEventListener("click", handleExternalLinkClick, true);
+    document.addEventListener("auxclick", handleExternalLinkClick, true);
+    document.addEventListener(EXTERNAL_LINK_REQUEST_EVENT, handleExternalLinkRequest, true);
+    document.addEventListener(EXTERNAL_LINK_LOG_EVENT, handleExternalLinkLog, true);
     window.addEventListener(EXTERNAL_LINK_REQUEST_EVENT, handleExternalLinkRequest, true);
+    window.addEventListener(EXTERNAL_LINK_LOG_EVENT, handleExternalLinkLog, true);
 
     chrome.runtime.sendMessage({ type: PING_EXTERNAL_LINK_HOST }, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        console.warn("WWDT: external link bridge is not available", chrome.runtime.lastError || response);
+        const error = chrome.runtime.lastError?.message || response?.error || "unknown error";
+        console.warn("WWDT: external link bridge is not available", error, response);
+        logExternalLink("content-ping-failed", { error, response });
+        return;
       }
+      logExternalLink("content-ping-ok", response);
     });
   }
 

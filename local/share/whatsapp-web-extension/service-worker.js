@@ -1,6 +1,7 @@
 const NATIVE_HOST = "com.shaka.wwdt_brave";
 const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
 const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
+const LOG_EXTERNAL_LINK = "wwdt:log-external-link";
 
 function isExternalHttpUrl(value) {
   try {
@@ -11,35 +12,67 @@ function isExternalHttpUrl(value) {
   }
 }
 
+function logExternalLink(event, data = {}) {
+  try {
+    chrome.runtime.sendNativeMessage(
+      NATIVE_HOST,
+      {
+        log: {
+          event,
+          data,
+          timestamp: new Date().toISOString()
+        }
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.warn("WWDT: failed to write external link log", chrome.runtime.lastError.message);
+        }
+      }
+    );
+  } catch (error) {
+    console.warn("WWDT: failed to schedule external link log", error);
+  }
+}
+
+function sendNativeMessage(payload, callback) {
+  try {
+    chrome.runtime.sendNativeMessage(NATIVE_HOST, payload, (response) => {
+      if (chrome.runtime.lastError) {
+        callback({ ok: false, error: chrome.runtime.lastError.message });
+        return;
+      }
+      callback(response && typeof response === "object" ? response : { ok: true });
+    });
+  } catch (error) {
+    callback({ ok: false, error: error?.message || String(error) });
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message) {
     return;
   }
 
+  if (message.type === LOG_EXTERNAL_LINK) {
+    logExternalLink(message.event || "unknown", message.data || {});
+    sendResponse({ ok: true });
+    return;
+  }
+
   if (message.type === PING_EXTERNAL_LINK_HOST) {
-    chrome.runtime.sendNativeMessage(NATIVE_HOST, { ping: true }, (response) => {
-      if (chrome.runtime.lastError) {
-        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
-        return;
-      }
-      sendResponse(response && response.ok ? { ok: true } : { ok: false });
+    sendNativeMessage({ ping: true }, (response) => {
+      sendResponse(response && response.ok ? { ok: true, browser: response.browser } : response);
+      logExternalLink("service-worker-ping-response", { response });
     });
     return true;
   }
 
   if (message.type !== OPEN_EXTERNAL_LINK || !isExternalHttpUrl(message.url)) return;
 
-  chrome.runtime.sendNativeMessage(
-    NATIVE_HOST,
-    { url: message.url },
-    (response) => {
-      if (chrome.runtime.lastError) {
-        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
-        return;
-      }
-      sendResponse(response && typeof response === "object" ? response : { ok: true });
-    }
-  );
+  sendNativeMessage({ url: message.url, source: message.source || "unknown" }, (response) => {
+    sendResponse(response);
+    logExternalLink("service-worker-open-response", { url: message.url, source: message.source, response });
+  });
 
   return true;
 });

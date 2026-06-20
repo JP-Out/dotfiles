@@ -1,9 +1,28 @@
 #!/usr/bin/env python3
 import json
+import os
 import shutil
 import struct
 import subprocess
 import sys
+from datetime import datetime, timezone
+
+
+LOG_PATH = os.path.expanduser("~/.local/state/whatsapp-web-chromium/link-open.log")
+
+
+def log_event(event, **data):
+    try:
+        os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+        payload = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "event": event,
+            **data,
+        }
+        with open(LOG_PATH, "a", encoding="utf-8") as log_file:
+            log_file.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 def find_browser():
@@ -24,6 +43,7 @@ def send_message(payload):
 def launch_url(url):
     browser = find_browser()
     if not browser:
+        log_event("native-open-failed", url=url, error="No browser launcher found")
         return False, "No browser launcher found"
 
     if browser.endswith("/brave") or browser.endswith("/brave-browser"):
@@ -31,7 +51,8 @@ def launch_url(url):
     else:
         command = [browser, url]
 
-    subprocess.Popen(
+    log_event("native-open-command", url=url, browser=browser, command=command)
+    process = subprocess.Popen(
         command,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
@@ -39,6 +60,7 @@ def launch_url(url):
         start_new_session=True,
         close_fds=True,
     )
+    log_event("native-open-spawned", url=url, browser=browser, pid=process.pid)
     return True, None
 
 
@@ -57,6 +79,7 @@ def read_native_message():
 
 def handle_url(url):
     if not isinstance(url, str) or not url.startswith(("http://", "https://")):
+        log_event("native-invalid-url", url=url)
         return {"ok": False, "error": "Invalid URL"}
 
     ok, error = launch_url(url)
@@ -66,11 +89,19 @@ def handle_url(url):
 
 
 def handle_message(message):
+    log_event("native-message", message=message)
     if isinstance(message, dict) and message.get("ping") is True:
-        return {"ok": find_browser() is not None}
+        browser = find_browser()
+        log_event("native-ping", browser=browser)
+        return {"ok": browser is not None, "browser": browser}
 
     if not isinstance(message, dict):
+        log_event("native-invalid-message", message=message)
         return {"ok": False, "error": "Invalid message"}
+
+    if "log" in message:
+        log_event("extension-log", payload=message.get("log"))
+        return {"ok": True}
 
     return handle_url(message.get("url"))
 

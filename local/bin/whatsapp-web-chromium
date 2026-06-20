@@ -6,6 +6,7 @@ profile_dir="$HOME/.local/share/whatsapp-web-chromium"
 app_url="https://web.whatsapp.com"
 chromium_extra_args=""
 extension_dir="$HOME/.local/share/whatsapp-web-extension"
+native_host_name="com.shaka.wwdt_brave"
 legacy_extension_id="pegillnacjhfdokcfpieidpbbknaaghh"
 extension_args=""
 start_hidden="0"
@@ -13,6 +14,34 @@ if [ -d "$extension_dir" ]; then
 	extension_args="--disable-extensions-except=${extension_dir} --load-extension=${extension_dir}"
 fi
 mkdir -p "$profile_dir" "$profile_dir/notification-sounds"
+
+install_native_messaging_host() {
+	native_host_source=""
+	for candidate in \
+		"$HOME/.local/share/chromium/NativeMessagingHosts/${native_host_name}.json" \
+		"$HOME/.dotfiles/local/share/chromium/NativeMessagingHosts/${native_host_name}.json"
+	do
+		if [ -f "$candidate" ]; then
+			native_host_source="$candidate"
+			break
+		fi
+	done
+
+	[ -n "$native_host_source" ] || return 0
+
+	for target_dir in \
+		"${XDG_CONFIG_HOME:-$HOME/.config}/chromium/NativeMessagingHosts" \
+		"${profile_dir}/NativeMessagingHosts"
+	do
+		target_file="${target_dir}/${native_host_name}.json"
+		mkdir -p "$target_dir"
+		if ! cmp -s "$native_host_source" "$target_file"; then
+			tmp_file="${target_file}.wwdt.$$"
+			cp "$native_host_source" "$tmp_file"
+			mv "$tmp_file" "$target_file"
+		fi
+	done
+}
 
 case "${WHATSAPP_DEVTOOLS:-0}" in
 	1|true|yes|on)
@@ -174,6 +203,7 @@ elif command -v hyprctl >/dev/null 2>&1 && is_hyprland; then
 	fi
 fi
 
+install_native_messaging_host
 cleanup_legacy_extension_state
 launch_chromium
 
