@@ -57,9 +57,10 @@
             "keyColor": "yellow"
         },
         {
-            "type": "packages",
+            "type": "command",
             "key": "│ ├󰏖",
-            "format": "\u001b[38;2;137;220;235m󰮯 {2}\u001b[0m  \u001b[38;2;249;199;125m󰏗 {44}\u001b[0m ",
+            "text": "printf '\\033[38;2;137;220;235m󰮯 %s\\033[0m  \\033[38;2;249;199;125m󰏗 %s\\033[0m ' \"$(pacman -Qqn | wc -l)\" \"$(pacman -Qqm | wc -l)\"",
+            "format": "{result}",
             "keyColor": "yellow"
         },
         {

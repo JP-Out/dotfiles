@@ -13,6 +13,9 @@ CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
 LOGFILE="$CACHE_DIR/bluetooth_autoconnect.log"
 mkdir -p "$CACHE_DIR"
 
+RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp}/bluetooth-autoconnect"
+POWER_ON_MARKER="$RUNTIME_DIR/power-on-attempted"
+
 if [[ "${DEBUG:-0}" = "1" ]]; then
   exec > >(tee -a "$LOGFILE") 2>&1
   set -x
@@ -72,21 +75,31 @@ fi
 
 # Liga adaptador se necessário
 if bluetoothctl show | grep -q "Powered: no"; then
+  if [[ -e "$POWER_ON_MARKER" ]]; then
+    log "Adaptador desligado; respeitando bluetoothctl power off manual."
+    exit 0
+  fi
+
   log "Ligando adaptador…"
+  mkdir -p "$RUNTIME_DIR"
+  : > "$POWER_ON_MARKER"
   bluetoothctl power on || true
   sleep 1
+else
+  mkdir -p "$RUNTIME_DIR"
+  : > "$POWER_ON_MARKER"
 fi
 
 #----------------------------- Helpers ---------------------------------#
 is_connected() { bluetoothctl info "$MAC_ALEXA" 2>/dev/null | grep -q "Connected: yes"; }
 
-bluetoothctl trust "$MAC_ALEXA" || true
-bluetoothctl pair  "$MAC_ALEXA" || true
-
 if is_connected; then
   log "Já conectado a $MAC_ALEXA"
   exit 0
 fi
+
+bluetoothctl trust "$MAC_ALEXA" || true
+bluetoothctl pair  "$MAC_ALEXA" || true
 
 #----------------------------- Conexão (uma tentativa só) --------------#
 log "Tentando conectar a $MAC_ALEXA…"

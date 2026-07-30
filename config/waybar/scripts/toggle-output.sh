@@ -1,13 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ===== Identificação exata dos seus sinks =====
-PAT_ALEXA='bluez_output\.AA_BB_CC_DD_EE_FF\.1'
+# Carrega identificadores locais que não devem ser versionados.
+for ENV_FILE in "${DOTFILES_ENV:-}" "$HOME/.dotfiles/.env.local" "${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/.env.local" "$HOME/.env.local"; do
+  [[ -n "$ENV_FILE" && -f "$ENV_FILE" ]] && . "$ENV_FILE"
+done
+
+# ===== Sinks preferidos, na ordem desejada =====
 PAT_ASTRO_GAME='alsa_output\.usb-Astro_Gaming_Astro_A50-00\.stereo-game'
 PAT_ASTRO_CHAT='alsa_output\.usb-Astro_Gaming_Astro_A50-00\.stereo-chat'
+PAT_HDMI='alsa_output\.pci-0000_09_00\.1\.hdmi-stereo-extra2'
 
-# ===== Lista completa na ordem desejada =====
-ORDER=("$PAT_ALEXA" "$PAT_ASTRO_GAME" "$PAT_ASTRO_CHAT")
+ORDER=()
+MAC_ALEXA_PIPEWIRE=""
+if [[ -n "${MAC_ALEXA:-}" ]]; then
+  MAC_ALEXA_PIPEWIRE="${MAC_ALEXA//:/_}"
+  PAT_ALEXA="bluez_output\\.${MAC_ALEXA_PIPEWIRE}\\.1"
+  ORDER+=("$PAT_ALEXA")
+fi
+ORDER+=("$PAT_ASTRO_GAME" "$PAT_ASTRO_CHAT" "$PAT_HDMI")
 
 # ===== Util =====
 mapfile -t SINKS < <(pactl list short sinks | awk '{print $2}')
@@ -21,10 +32,15 @@ pick_sink() {
 }
 
 pretty_name() {
+  if [[ -n "$MAC_ALEXA_PIPEWIRE" && "$1" == *"bluez_output.${MAC_ALEXA_PIPEWIRE}.1"* ]]; then
+    echo "Echo Dot"
+    return
+  fi
+
   case "$1" in
     *usb-Astro_Gaming_Astro_A50-00.stereo-game*) echo "Astro A50 (GAME)";;
     *usb-Astro_Gaming_Astro_A50-00.stereo-chat*) echo "Astro A50 (CHAT)";;
-    *bluez_output.AA_BB_CC_DD_EE_FF.1*)          echo "Echo Dot";;
+    *alsa_output.pci-0000_09_00.1.hdmi-stereo-extra2*) echo "Gigabyte G27FC";;
     *)                                           echo "$1";;
   esac
 }
@@ -34,21 +50,42 @@ icon_for() {
     *usb-Astro_Gaming_Astro_A50-00.stereo-game*)  echo "audio-headset" ;;   # GAME
     *usb-Astro_Gaming_Astro_A50-00.stereo-chat*)  echo "audio-input-microphone" ;;   # VOICE
     *bluez_output.*)                              echo "audio-speakers" ;;           # Alexa
+    *alsa_output.pci-0000_09_00.1.hdmi-stereo-extra2*) echo "video-display" ;;
     *)                                            echo "multimedia-volume-control" ;;
   esac
 }
 
-# ===== Resolve todos os nomes reais =====
+has_resolved() {
+  local candidate="$1"
+  local existing
+  for existing in "${RESOLVED[@]}"; do
+    [[ "$existing" == "$candidate" ]] && return 0
+  done
+  return 1
+}
+
+# ===== Resolve os preferidos e inclui qualquer outra saida disponivel =====
 RESOLVED=()
 for pat in "${ORDER[@]}"; do
   resolved="$(pick_sink "$pat" || true)"
   [[ -n "$resolved" ]] && RESOLVED+=("$resolved")
 done
 
-if (( ${#RESOLVED[@]} < 2 )); then
-  command -v notify-send >/dev/null && notify-send -u low -a "Áudio" "Não encontrado todos os dispositivos configurados"
-  echo "Erro: Sinks configurados não encontrados."
+for sink in "${SINKS[@]}"; do
+  has_resolved "$sink" || RESOLVED+=("$sink")
+done
+
+if (( ${#RESOLVED[@]} == 0 )); then
+  command -v notify-send >/dev/null && notify-send -u low -a "Áudio" "Nenhuma saída de áudio encontrada"
+  echo "Erro: nenhum sink encontrado."
   exit 1
+fi
+
+if (( ${#RESOLVED[@]} < 2 )); then
+  only="$(pretty_name "${RESOLVED[0]}")"
+  command -v notify-send >/dev/null && notify-send -u low -a "Áudio" "Só há uma saída de áudio disponível" "$only"
+  echo "Apenas um sink disponível: ${RESOLVED[0]}"
+  exit 0
 fi
 
 # ===== Descobre o próximo da ordem =====

@@ -90,7 +90,14 @@ is_owned() {
 	[[ -f "$OWNED_FILE" ]] && [[ "$(cat "$OWNED_FILE")" == "1" ]]
 }
 
-fullscreen_active=unknown
+# O estado já existente no início da sessão é apenas a linha de base. Assim,
+# uma janela restaurada em tela cheia não liga o DND durante o boot.
+if has_fullscreen_window; then
+	fullscreen_active=yes
+else
+	fullscreen_active=no
+fi
+mark_owned 0
 
 while :; do
 	if has_fullscreen_window; then

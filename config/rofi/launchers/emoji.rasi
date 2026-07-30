@@ -16,6 +16,9 @@ mainbox {
 listview {
     columns: 8;
     lines: 5;
+    /* Mantém a lista vertical e preenche cada linha antes de iniciar a próxima. */
+    layout: vertical;
+    flow: horizontal;
     spacing: 10px;
     cycle: false;
     dynamic: false;   /* IMPORTANTE */

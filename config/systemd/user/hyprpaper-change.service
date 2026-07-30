@@ -2,4 +2,4 @@
 Description=Troca automática de wallpapers no Hyprland
 
 [Service]
-ExecStart=%h/.config/scripts/hyprpaper_change.sh
+ExecStart=%h/.config/hypr/scripts/hyprpaper_change.sh

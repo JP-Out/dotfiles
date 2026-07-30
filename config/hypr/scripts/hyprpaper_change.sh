@@ -1,43 +1,80 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 MONITOR="DP-2"
 WALLPAPER_DIR="$HOME/wallpapers"
-CONF_FILE="$HOME/.config/hypr/hyprpaper.conf"
+STATE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hyprpaper/current_wallpaper"
 
 # Pastas ou imagens para ignorar (separadas por | )
 # Exemplo: "dark|jogos|nao_usar.png"
 IGNORE_PATTERN="voyager-samurai-square.png|voyager-samurai.png"
 
-# Wallpaper atual
-CURRENT_WALLPAPER=$(hyprctl hyprpaper list | awk '{print $2}' | head -n 1)
+CURRENT_WALLPAPER=""
+if [[ -f "$STATE_FILE" ]]; then
+    CURRENT_WALLPAPER=$(<"$STATE_FILE")
+fi
 
-# Lista de wallpapers filtrando extensões e ignorados
-ALL_WALLPAPERS=$(find "$WALLPAPER_DIR" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \) \
-    | grep -Ev "$IGNORE_PATTERN")
+mapfile -t ALL_WALLPAPERS < <(
+    find "$WALLPAPER_DIR" -type f \
+        \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" -o -iname "*.jxl" \) \
+        | sort
+)
 
-# Remove o atual da lista
-AVAILABLE_WALLPAPERS=$(echo "$ALL_WALLPAPERS" | grep -vF "$CURRENT_WALLPAPER")
+CANDIDATES=()
+AVAILABLE_WALLPAPERS=()
+for WALLPAPER in "${ALL_WALLPAPERS[@]}"; do
+    if [[ "$WALLPAPER" =~ $IGNORE_PATTERN ]]; then
+        continue
+    fi
 
-# Escolhe aleatório
-NEXT_WALLPAPER=$(echo "$AVAILABLE_WALLPAPERS" | shuf -n 1)
+    CANDIDATES+=("$WALLPAPER")
 
-# Aplica no monitor e atualiza o conf
-if [[ -n "$NEXT_WALLPAPER" ]]; then
-    hyprctl hyprpaper preload "$NEXT_WALLPAPER"
-    hyprctl hyprpaper wallpaper "$MONITOR,$NEXT_WALLPAPER"
+    if [[ "$WALLPAPER" != "$CURRENT_WALLPAPER" ]]; then
+        AVAILABLE_WALLPAPERS+=("$WALLPAPER")
+    fi
+done
 
-    # Remove linhas antigas de preload e wallpaper
-    sed -i '/^preload/d' "$CONF_FILE"
-    sed -i '/^wallpaper/d' "$CONF_FILE"
+if (( ${#CANDIDATES[@]} == 0 )); then
+    echo "Nenhum wallpaper encontrado em $WALLPAPER_DIR" >&2
+    exit 1
+fi
 
-    # Adiciona novas linhas ao final do arquivo
-    {
-        echo "# Gerado automaticamente em $(date)"
-        echo "preload = $NEXT_WALLPAPER"
-        echo "wallpaper = $MONITOR,$NEXT_WALLPAPER"
-    } >> "$CONF_FILE"
+if (( ${#AVAILABLE_WALLPAPERS[@]} == 0 )); then
+    AVAILABLE_WALLPAPERS=("${CANDIDATES[@]}")
+fi
 
-    ICON="/tmp/wp_icon.png"
-    convert "$NEXT_WALLPAPER" -resize 256x256 "$ICON"
-    notify-send -i "$ICON" "Hyprpaper" "Novo wallpaper aplicado..."
+NEXT_WALLPAPER="${AVAILABLE_WALLPAPERS[RANDOM % ${#AVAILABLE_WALLPAPERS[@]}]}"
+
+APPLIED=0
+for _ in {1..20}; do
+    if hyprctl hyprpaper wallpaper "$MONITOR, $NEXT_WALLPAPER, cover" >/dev/null 2>&1; then
+        APPLIED=1
+        break
+    fi
+
+    sleep 0.25
+done
+
+if (( APPLIED == 0 )); then
+    echo "Nao foi possivel aplicar o wallpaper via IPC do hyprpaper" >&2
+    exit 1
+fi
+
+mkdir -p "$(dirname "$STATE_FILE")"
+printf '%s\n' "$NEXT_WALLPAPER" > "$STATE_FILE"
+
+ICON="/tmp/wp_icon.png"
+if command -v notify-send >/dev/null 2>&1; then
+    if command -v magick >/dev/null 2>&1; then
+        magick "$NEXT_WALLPAPER" -resize 256x256 "$ICON" \
+            && notify-send -i "$ICON" "Hyprpaper" "Novo wallpaper aplicado..." \
+            || true
+    elif command -v convert >/dev/null 2>&1; then
+        convert "$NEXT_WALLPAPER" -resize 256x256 "$ICON" \
+            && notify-send -i "$ICON" "Hyprpaper" "Novo wallpaper aplicado..." \
+            || true
+    else
+        notify-send "Hyprpaper" "Novo wallpaper aplicado..." \
+        || true
+    fi
 fi

@@ -215,7 +215,7 @@
   "custom/clipboard": {
     "format": "",
     "tooltip-format": "Área de Transferência",
-    "on-click": "copyq toggle & sleep 0.1 && hyprctl dispatch focuswindow \"class:^(com.github.hluk.copyq)$\""
+    "on-click": "copyq toggle"
   },
   "custom/whatsapp": {
     "exec": "~/.config/waybar/scripts/whatsapp_status.sh",
@@ -238,7 +238,7 @@
   },
   "custom/separator_tray": {
     "exec": "~/.config/waybar/scripts/separator_tray.sh",
-    "interval": 5
+    "interval": 1
   },
   "custom/separator_clock": {
     "format": "│",
