@@ -6,7 +6,7 @@
   },
   {
     "label": "Deslogar",
-    "exec": "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'",
+    "exec": "hyprctl dispatch hl.dsp.exit()",
     "icon": "/home/shaka/.config/nwg-bar/icons/system-log-out.svg"
   },
   {
