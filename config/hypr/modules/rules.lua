@@ -1,15 +1,32 @@
+-- ╔═════════════╗
+-- ║ APLICATIVOS ║
+-- ╚═════════════╝
+
+-- Documentação oficial:
+-- https://wiki.hypr.land/Configuring/Window-Rules/
+-- https://wiki.hypr.land/Configuring/Workspace-Rules/
+
+-- ─────────────────────────────
+--  Regras úteis para o sistema
+-- ─────────────────────────────
+
+-- WhatsApp no workspace especial
 hl.window_rule({
     name = "whatsapp-special-workspace",
     match = { class = "^chrome-web\\.whatsapp\\.com__-Default$" },
     workspace = "special:whatsapp silent",
 })
 
+-- Ignorar requisições de maximização
 hl.window_rule({
     name = "suppress-client-maximize",
     match = { class = ".*" },
     suppress_event = "maximize",
 })
 
+-- ─────────────────────────────
+--  LXQt Sudo
+-- ─────────────────────────────
 hl.window_rule({
     name = "lxsudo-dialog",
     match = { class = "^lxqt-sudo$" },
@@ -18,6 +35,9 @@ hl.window_rule({
     size = "728 295",
 })
 
+-- ─────────────────────────────
+--  CopyQ
+-- ─────────────────────────────
 hl.window_rule({
     name = "copyq-window",
     match = { class = "^com\\.github\\.hluk\\.copyq$" },
@@ -26,6 +46,9 @@ hl.window_rule({
     size = "340 500",
 })
 
+-- ─────────────────────────────
+--  Galendae
+-- ─────────────────────────────
 hl.window_rule({
     name = "galendae-window",
     match = { class = "^galendae$" },
@@ -35,6 +58,9 @@ hl.window_rule({
     animation = "slide top",
 })
 
+-- ─────────────────────────────
+--  Popups da Waybar
+-- ─────────────────────────────
 hl.window_rule({
     name = "network-popup",
     match = { class = "^nmtui-popup$" },
@@ -51,6 +77,9 @@ hl.window_rule({
     size = "650 480",
 })
 
+-- ─────────────────────────────
+--  Kdenlive
+-- ─────────────────────────────
 hl.window_rule({
     name = "kdenlive-no-fullscreen",
     match = { class = "^org\\.kde\\.kdenlive$" },

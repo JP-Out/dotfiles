@@ -1,7 +1,18 @@
+-- ╔══════════════════════════════════╗
+-- ║           LOOK AND FEEL          ║
+-- ╚══════════════════════════════════╝
+
 hl.config({
+    -- ─────────────────────────────
+    --  Debug
+    -- ─────────────────────────────
     debug = {
         disable_logs = false,
     },
+
+    -- ─────────────────────────────
+    --  Aparência geral
+    -- ─────────────────────────────
     general = {
         gaps_in = 8,
         gaps_out = { top = 3, right = 10, bottom = 10, left = 10 },
@@ -14,6 +25,10 @@ hl.config({
         allow_tearing = false,
         layout = "dwindle",
     },
+
+    -- ─────────────────────────────
+    --  Decoração de janelas
+    -- ─────────────────────────────
     decoration = {
         rounding = 10,
         rounding_power = 2,
@@ -32,15 +47,27 @@ hl.config({
             vibrancy = 0.910,
         },
     },
+
+    -- ─────────────────────────────
+    --  Animações
+    -- ─────────────────────────────
     animations = {
         enabled = true,
     },
+
+    -- ─────────────────────────────
+    --  Layouts
+    -- ─────────────────────────────
     dwindle = {
         preserve_split = true,
     },
     master = {
         new_status = "master",
     },
+
+    -- ─────────────────────────────
+    --  Miscelânea
+    -- ─────────────────────────────
     misc = {
         force_default_wallpaper = 0,
         disable_hyprland_logo = true,
@@ -49,6 +76,7 @@ hl.config({
     },
 })
 
+-- Curva e animações detalhadas
 hl.curve("myBezier", {
     type = "bezier",
     points = { { 0.05, 0.9 }, { 0.1, 1.05 } },

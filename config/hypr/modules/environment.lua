@@ -1,5 +1,11 @@
 local home = assert(os.getenv("HOME"), "HOME precisa estar definida para carregar os dotfiles")
 
+-- ╔══════════════════════════════════╗
+-- ║            MONITORS              ║
+-- ╚══════════════════════════════════╝
+
+-- Configuração dos monitores
+-- https://wiki.hypr.land/Configuring/Monitors/
 hl.monitor({
     output = "DP-2",
     mode = "1920x1080@165",
@@ -7,6 +13,11 @@ hl.monitor({
     scale = 1,
 })
 
+-- ╔══════════════════════════════════╗
+-- ║      ENVIRONMENT VARIABLES       ║
+-- ╚══════════════════════════════════╝
+
+-- Variáveis de ambiente
 local environment = {
     PATH = table.concat({
         home .. "/bin",
@@ -43,3 +54,15 @@ local environment = {
 for name, value in pairs(environment) do
     hl.env(name, value)
 end
+
+-- ╔══════════════════════════════════╗
+-- ║            PERMISSIONS           ║
+-- ╚══════════════════════════════════╝
+
+-- Permissões exigem reiniciar o Hyprland para entrar em vigor.
+-- https://wiki.hypr.land/Configuring/Permissions/
+--
+-- hl.config({ ecosystem = { enforce_permissions = true } })
+-- hl.permission("/usr/(bin|local/bin)/grim", "screencopy", "allow")
+-- hl.permission("/usr/(lib|libexec|lib64)/xdg-desktop-portal-hyprland", "screencopy", "allow")
+-- hl.permission("/usr/(bin|local/bin)/hyprpm", "plugin", "allow")

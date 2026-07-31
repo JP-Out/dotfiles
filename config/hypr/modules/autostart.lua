@@ -1,3 +1,8 @@
+-- ╔══════════════════════════════════╗
+-- ║             AUTOSTART            ║
+-- ╚══════════════════════════════════╝
+
+-- Programas iniciados junto com o Hyprland
 hl.on("hyprland.start", function()
     hl.exec_cmd("swaync")
     hl.exec_cmd("sleep 1; swaync-client --dnd-off")

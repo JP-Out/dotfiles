@@ -1,4 +1,12 @@
+-- ╔══════════════════════════════════╗
+-- ║              INPUT               ║
+-- ╚══════════════════════════════════╝
+
 hl.config({
+    -- ─────────────────────────────
+    --  Teclado, mouse e touchpad
+    -- ─────────────────────────────
+    -- https://wiki.hypr.land/Configuring/Variables/#input
     input = {
         kb_layout = "br",
         kb_variant = "abnt2",
@@ -11,11 +19,19 @@ hl.config({
             natural_scroll = false,
         },
     },
+
+    -- ─────────────────────────────
+    --  Gestos do touchpad
+    -- ─────────────────────────────
     gestures = {
         workspace_swipe_touch = false,
     },
 })
 
+-- ─────────────────────────────
+--  Configuração por dispositivo
+-- ─────────────────────────────
+-- https://wiki.hypr.land/Configuring/Keywords/#per-device-input-configs
 hl.device({
     name = "epic-mouse-v1",
     sensitivity = -0.5,
