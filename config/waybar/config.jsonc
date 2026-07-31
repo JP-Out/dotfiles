@@ -103,7 +103,7 @@
     "format-disconnected": "",
     "tooltip-format": "<span size='24000' rise='-6000'>󰅚</span> Sem conexão Ethernet",
     "tooltip-format-ethernet": "<span size='24000' rise='-6000'></span> Conexão Ethernet - {ifname}",
-    "on-click": "hyprctl dispatch exec '[float; size 450 380; center; class btctl]' 'kitty -e nmtui'"
+    "on-click": "kitty --class=nmtui-popup -e nmtui"
   },
   "pulseaudio": {
     "scroll-step": 5,
@@ -127,7 +127,7 @@
     "tooltip-format": "{controller_alias}\t{controller_address}",
     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
     "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
-    "on-click": "hyprctl dispatch exec '[float; size 650 480; center; class btctl]' 'kitty --class=btctl -e bluetoothctl'",
+    "on-click": "kitty --class=bluetooth-popup -e bluetoothctl",
     "on-click-right": "$HOME/.config/waybar/scripts/bt-reconnect.sh"
   },
 

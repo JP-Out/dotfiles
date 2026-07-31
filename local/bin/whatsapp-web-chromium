@@ -59,6 +59,11 @@ esac
 
 runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 socket="${runtime_dir}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket.sock"
+hypr_helper="$HOME/.config/hypr/scripts/lib/hyprland-ipc.sh"
+if [ -r "$hypr_helper" ]; then
+	# shellcheck source=/dev/null
+	. "$hypr_helper"
+fi
 
 is_hyprland() {
 	[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] || [ "${XDG_CURRENT_DESKTOP:-}" = "Hyprland" ]
@@ -68,8 +73,28 @@ hypr_query() {
 	printf '%s' "$1" | nc -U "$socket"
 }
 
-hypr_dispatch() {
-	hyprctl dispatch "$@" >/dev/null
+require_hypr_helper() {
+	command -v hypr_dispatch >/dev/null 2>&1 || {
+		echo "Helper do Hyprland não encontrado: $hypr_helper" >&2
+		return 1
+	}
+}
+
+hypr_move_window_to_workspace() {
+	workspace_q="$(hypr_lua_quote "$1")"
+	selector="$(hypr_address_selector "$2")"
+	follow="${3:-true}"
+	hypr_dispatch "hl.dsp.window.move({ workspace = ${workspace_q}, follow = ${follow}, window = ${selector} })" >/dev/null
+}
+
+hypr_focus_window() {
+	selector="$(hypr_address_selector "$1")"
+	hypr_dispatch "hl.dsp.focus({ window = ${selector} })" >/dev/null
+}
+
+hypr_close_window() {
+	selector="$(hypr_address_selector "$1")"
+	hypr_dispatch "hl.dsp.window.close({ window = ${selector} })" >/dev/null
 }
 
 cleanup_legacy_extension_state() {
@@ -192,12 +217,13 @@ wait_for_client_address() {
 }
 
 if [ -S "$socket" ] && command -v nc >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && is_hyprland; then
+	require_hypr_helper
 	clients_json="$(hypr_query 'j/clients' 2>/dev/null || printf '[]')"
 	client_json="$(printf '%s' "$clients_json" | jq -c --arg cls "$app_class" 'map(select(.class == $cls))[0] // empty')"
 	if [ -n "$client_json" ]; then
 		address="$(printf '%s' "$client_json" | jq -r '.address')"
 		if [ -n "$chromium_extra_args" ]; then
-			hypr_dispatch closewindow "address:${address}" || true
+			hypr_close_window "$address" || true
 			attempt=0
 			while [ "$attempt" -lt 30 ]; do
 				sleep 0.1
@@ -215,28 +241,30 @@ if [ -S "$socket" ] && command -v nc >/dev/null 2>&1 && command -v jq >/dev/null
 		active_workspace="$(hypr_query 'j/activeworkspace' 2>/dev/null | jq -r '.name // ""')"
 
 		if [ "$start_hidden" = "1" ]; then
-			hypr_dispatch movetoworkspacesilent "special:whatsapp,address:${address}" || true
+			hypr_move_window_to_workspace "special:whatsapp" "$address" false || true
 			exit 0
 		fi
 
 		if [ "$workspace" = "special:whatsapp" ] && [ -n "$active_workspace" ]; then
-			hypr_dispatch movetoworkspace "${active_workspace},address:${address}" || true
+			hypr_move_window_to_workspace "$active_workspace" "$address" || true
 		elif [ -n "$workspace" ] && [ "$workspace" != "$active_workspace" ]; then
-			hypr_dispatch workspace "$workspace" || true
+			workspace_q="$(hypr_lua_quote "$workspace")"
+			hypr_dispatch "hl.dsp.focus({ workspace = ${workspace_q} })" >/dev/null || true
 			sleep 0.05
 		fi
 
-		hypr_dispatch focuswindow "address:${address}" || \
-			hypr_dispatch focuswindow "class:${app_class}" || true
+		hypr_focus_window "$address" || \
+			hypr_dispatch 'hl.dsp.focus({ window = "class:chrome-web.whatsapp.com__-Default" })' >/dev/null || true
 		exit 0
 	fi
 elif command -v hyprctl >/dev/null 2>&1 && is_hyprland; then
 	if hyprctl clients 2>/dev/null | grep -Fq "class: ${app_class}"; then
+		require_hypr_helper
 		if [ "$start_hidden" = "1" ]; then
-			hyprctl dispatch movetoworkspacesilent "special:whatsapp,class:${app_class}" >/dev/null 2>&1 || true
+			hypr_dispatch 'hl.dsp.window.move({ workspace = "special:whatsapp", follow = false, window = "class:chrome-web.whatsapp.com__-Default" })' >/dev/null 2>&1 || true
 			exit 0
 		fi
-		hyprctl dispatch focuswindow "class:${app_class}" >/dev/null 2>&1 || true
+		hypr_dispatch 'hl.dsp.focus({ window = "class:chrome-web.whatsapp.com__-Default" })' >/dev/null 2>&1 || true
 		exit 0
 	fi
 fi
@@ -247,12 +275,13 @@ cleanup_extension_runtime_cache
 launch_chromium
 
 if [ "$start_hidden" = "0" ] && [ -S "$socket" ] && command -v nc >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && is_hyprland; then
+	require_hypr_helper
 	if address="$(wait_for_client_address)"; then
 		active_workspace="$(hypr_query 'j/activeworkspace' 2>/dev/null | jq -r '.name // ""')"
 		if [ -n "$active_workspace" ]; then
-			hypr_dispatch movetoworkspace "${active_workspace},address:${address}" || true
+			hypr_move_window_to_workspace "$active_workspace" "$address" || true
 		fi
-		hypr_dispatch focuswindow "address:${address}" || \
-			hypr_dispatch focuswindow "class:${app_class}" || true
+		hypr_focus_window "$address" || \
+			hypr_dispatch 'hl.dsp.focus({ window = "class:chrome-web.whatsapp.com__-Default" })' >/dev/null || true
 	fi
 fi

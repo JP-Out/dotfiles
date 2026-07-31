@@ -4,6 +4,10 @@ set -eu
 app_class="chrome-web.whatsapp.com__-Default"
 runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 socket="${runtime_dir}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket.sock"
+helper="$HOME/.config/hypr/scripts/lib/hyprland-ipc.sh"
+[ -r "$helper" ] || { echo "Helper do Hyprland não encontrado: $helper" >&2; exit 1; }
+# shellcheck source=/dev/null
+. "$helper"
 
 clients_json() {
 	if [ -S "$socket" ] && command -v nc >/dev/null 2>&1; then
@@ -33,13 +37,15 @@ case "${1:-}" in
 		workspace="$(client_workspace)"
 		address="$(client_address)"
 		if [ -n "$address" ] && [ "$workspace" != "special:whatsapp" ]; then
-			hyprctl dispatch movetoworkspacesilent "special:whatsapp,address:${address}" >/dev/null
+			selector="$(hypr_address_selector "$address")"
+			hypr_dispatch "hl.dsp.window.move({ workspace = \"special:whatsapp\", follow = false, window = $selector })" >/dev/null
 		fi
 		;;
 	quit)
 		address="$(client_address)"
 		if [ -n "$address" ]; then
-			hyprctl dispatch closewindow "address:${address}" >/dev/null || true
+			selector="$(hypr_address_selector "$address")"
+			hypr_dispatch "hl.dsp.window.close({ window = $selector })" >/dev/null || true
 		fi
 		;;
 	*)

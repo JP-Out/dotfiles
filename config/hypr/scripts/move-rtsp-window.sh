@@ -3,6 +3,9 @@ set -euo pipefail
 
 WINDOW_TITLE_PREFIX="Hypr RTSP Stream"
 WINDOW_CLASS="hypr-rtsp-stream"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/hyprland-ipc.sh
+source "$SCRIPT_DIR/lib/hyprland-ipc.sh"
 
 usage() {
     echo "Uso: $(basename "$0") X Y" >&2
@@ -25,6 +28,11 @@ main() {
         exit 2
     fi
 
+    [[ "$x" =~ ^-?[0-9]+$ && "$y" =~ ^-?[0-9]+$ ]] || {
+        echo "X e Y precisam ser números inteiros." >&2
+        exit 2
+    }
+
     need hyprctl
     need jq
 
@@ -46,8 +54,10 @@ main() {
     fi
 
     [[ -n "$address" ]] || exit 0
-    hyprctl dispatch setfloating address:"$address" >/dev/null
-    hyprctl dispatch movewindowpixel exact "$x" "$y",address:"$address" >/dev/null
+    local selector
+    selector="$(hypr_address_selector "$address")"
+    hypr_dispatch "hl.dsp.window.float({ action = \"on\", window = $selector })" >/dev/null
+    hypr_dispatch "hl.dsp.window.move({ x = $x, y = $y, window = $selector })" >/dev/null
 }
 
 main "$@"

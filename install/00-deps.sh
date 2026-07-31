@@ -13,6 +13,7 @@ set -euo pipefail
 PACMAN_PACKAGES=(
   base-devel
   git
+  gitleaks          # bloqueia segredos antes de commit/push
   curl
   wget
   bc
@@ -26,6 +27,7 @@ PACMAN_PACKAGES=(
   hyprlock
   hyprpaper
   iproute2          # ip
+  jq
   kitty
   libnotify         # notify-send
   mpv

@@ -7,6 +7,9 @@ WINDOW_X=12
 WINDOW_Y=840
 WINDOW_WIDTH=405
 WINDOW_HEIGHT=230
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/hyprland-ipc.sh
+source "$SCRIPT_DIR/lib/hyprland-ipc.sh"
 
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
     STATE_DIR="$XDG_RUNTIME_DIR/hypr-rtsp-stream"
@@ -48,13 +51,20 @@ prepare_state_dir() {
 }
 
 load_env() {
-    local env_file="$HOME/.dotfiles/.env.local"
-    [[ -f "$env_file" ]] || return 0
-
-    set -a
-    # shellcheck disable=SC1090
-    source "$env_file"
-    set +a
+    local env_file
+    for env_file in \
+        "${DOTFILES_ENV:-}" \
+        "$HOME/.dotfiles/.env.local" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/.env.local" \
+        "$HOME/.env.local"
+    do
+        [[ -n "$env_file" && -f "$env_file" ]] || continue
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+        return 0
+    done
 }
 
 stream_url() {
@@ -73,7 +83,7 @@ stream_url() {
     path="${HYPR_RTSP_PATH:-${RTSP_PATH:-stream1}}"
 
     if [[ -z "$host" || -z "$password" ]]; then
-        echo "Configure HYPR_RTSP_URL ou IP_CAMERA/CAMERA_PASSWORD no .env.local." >&2
+        echo "Configure HYPR_RTSP_URL ou HYPR_RTSP_HOST/HYPR_RTSP_PASSWORD no .env.local." >&2
         exit 1
     fi
 
@@ -111,8 +121,10 @@ rtsp_window_rows() {
 close_rtsp_window() {
     local address="$1"
     local pid="$2"
+    local selector
 
-    hyprctl dispatch closewindow address:"$address" >/dev/null 2>&1 || true
+    selector="$(hypr_address_selector "$address")"
+    hypr_dispatch "hl.dsp.window.close({ window = $selector })" >/dev/null 2>&1 || true
     sleep 0.1
     kill "$pid" >/dev/null 2>&1 || true
 }
@@ -158,16 +170,16 @@ find_window_address() {
 apply_window_properties() {
     local address="$1"
     local mode="$2"
+    local selector
 
-    hyprctl --batch "\
-dispatch focuswindow address:$address; \
-dispatch setfloating address:$address; \
-dispatch resizewindowpixel exact ${WINDOW_WIDTH} ${WINDOW_HEIGHT},address:$address; \
-dispatch movewindowpixel exact ${WINDOW_X} ${WINDOW_Y},address:$address; \
-"
+    selector="$(hypr_address_selector "$address")"
+    hypr_dispatch "hl.dsp.focus({ window = $selector })" >/dev/null
+    hypr_dispatch "hl.dsp.window.float({ action = \"on\", window = $selector })" >/dev/null
+    hypr_dispatch "hl.dsp.window.resize({ x = $WINDOW_WIDTH, y = $WINDOW_HEIGHT, window = $selector })" >/dev/null
+    hypr_dispatch "hl.dsp.window.move({ x = $WINDOW_X, y = $WINDOW_Y, window = $selector })" >/dev/null
 
     if [[ "$mode" == "sticky" ]]; then
-        hyprctl dispatch pin address:"$address" >/dev/null
+        hypr_dispatch "hl.dsp.window.pin({ action = \"on\", window = $selector })" >/dev/null
     fi
 }
 

@@ -5,9 +5,12 @@ WINDOW_TITLE_PREFIX="Hypr RTSP Stream"
 WINDOW_CLASS="hypr-rtsp-stream"
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/hypr-rtsp-stream"
 STATE_FILE="$STATE_DIR/fullscreen-pinned-address"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/hyprland-ipc.sh
+source "$SCRIPT_DIR/lib/hyprland-ipc.sh"
 
 default_fullscreen() {
-    hyprctl dispatch fullscreen
+    hypr_dispatch 'hl.dsp.window.fullscreen({ action = "toggle" })'
 }
 
 active_window() {
@@ -15,7 +18,7 @@ active_window() {
 }
 
 main() {
-    local active address class title pinned fullscreen saved_address
+    local active address class title pinned fullscreen saved_address selector
 
     active="$(active_window || true)"
     if [[ -z "$active" || "$active" == "{}" ]]; then
@@ -42,11 +45,12 @@ main() {
 
     saved_address=""
     [[ -f "$STATE_FILE" ]] && saved_address="$(cat "$STATE_FILE")"
+    selector="$(hypr_address_selector "$address")"
 
     if [[ "$fullscreen" != "0" && "$saved_address" == "$address" ]]; then
-        hyprctl dispatch fullscreen
+        hypr_dispatch "hl.dsp.window.fullscreen({ action = \"toggle\", window = $selector })"
         sleep 0.05
-        hyprctl dispatch pin address:"$address" >/dev/null
+        hypr_dispatch "hl.dsp.window.pin({ action = \"on\", window = $selector })" >/dev/null
         rm -f "$STATE_FILE"
         return
     fi
@@ -54,9 +58,9 @@ main() {
     if [[ "$pinned" == "true" ]]; then
         mkdir -p "$STATE_DIR"
         printf '%s\n' "$address" > "$STATE_FILE"
-        hyprctl dispatch pin address:"$address" >/dev/null
+        hypr_dispatch "hl.dsp.window.pin({ action = \"off\", window = $selector })" >/dev/null
         sleep 0.05
-        hyprctl dispatch fullscreen
+        hypr_dispatch "hl.dsp.window.fullscreen({ action = \"toggle\", window = $selector })"
         return
     fi
 

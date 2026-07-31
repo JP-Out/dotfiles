@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WITH_BAR="3,10,10,10"
-NO_BAR="10,10,10,10"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/hyprland-ipc.sh
+source "$SCRIPT_DIR/lib/hyprland-ipc.sh"
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/waybar"
 MODE_FILE="$STATE_DIR/mode"
@@ -34,8 +35,8 @@ tiled_count_on_ws(){
   '
 }
 
-show_bar(){ pkill -SIGUSR1 waybar || true; hyprctl keyword general:gaps_out "$WITH_BAR" >/dev/null; }
-hide_bar(){ pkill -SIGUSR2 waybar || true; hyprctl keyword general:gaps_out "$NO_BAR"   >/dev/null; }
+show_bar(){ pkill -SIGUSR1 waybar || true; hypr_set_gaps 3 10 10 10 >/dev/null; }
+hide_bar(){ pkill -SIGUSR2 waybar || true; hypr_set_gaps 10 10 10 10 >/dev/null; }
 
 SHOW_ZONE=2
 HIDE_ZONE=44

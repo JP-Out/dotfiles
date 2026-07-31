@@ -7,6 +7,11 @@
 # Variavel com o MAC da Alexa
 .env.local
 
+# Stub criado automaticamente pelo Hyprland 0.56 quando a configuração é Lua
+config/hypr/hyprland.conf
+
+# Relatórios locais do scanner de segredos
+gitleaks-report.*
+
 # Ignorar o Hyprpaper (Adiciona comentarios novos a cada troca de wallpaper)
 config/hypr/hyprpaper.conf
-

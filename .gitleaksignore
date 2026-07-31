@@ -1,0 +1,3 @@
+# Chave pública do manifesto Chromium. Ela mantém o ID estável da extensão e
+# não concede acesso ao host de native messaging.
+928217ad4cefaba5e96cfeddcba102c27606c98b:local/share/whatsapp-web-extension/manifest.json:generic-api-key:6

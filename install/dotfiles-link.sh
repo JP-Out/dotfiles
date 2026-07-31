@@ -13,8 +13,20 @@ set -euo pipefail
 
 DRY_RUN=0; FORCE=0; VERBOSE=0
 log()  { printf '%s\n' "$*"; }
-vlog() { [ "$VERBOSE" -eq 1 ] && printf '%s\n' "$*"; }
-run()  { if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] $*"; else eval "$@"; fi; }
+vlog() {
+  if [ "$VERBOSE" -eq 1 ]; then
+    printf '%s\n' "$*"
+  fi
+}
+run() {
+  if [ "$DRY_RUN" -eq 1 ]; then
+    printf '[dry-run]'
+    printf ' %q' "$@"
+    printf '\n'
+  else
+    "$@"
+  fi
+}
 
 # ---------- Descobre diretório do script (resolve symlinks) ----------
 resolve_script_dir() {
@@ -69,11 +81,12 @@ backup_path() { printf '%s.bak-%s' "$1" "$(timestamp)"; }
 ensure_parent_dir() {
   local target="$1"
   local parent; parent="$(dirname -- "$target")"
-  [ -d "$parent" ] || run "mkdir -p -- \"$parent\""
+  [ -d "$parent" ] || run mkdir -p -- "$parent"
 }
 
 link_one() {
   local dest="$1" relsrc="$2"
+  dest="${dest/#\$HOME/$HOME}"
   dest="${dest/#\~/$HOME}"
 
   # Origem é relativa ao BASE_DIR (ou absoluta, se vier /…)
@@ -104,21 +117,21 @@ link_one() {
     fi
     if [ "$FORCE" -eq 1 ]; then
       vlog "↻ Relink (force): $dest (era -> $current)"
-      run "ln -sfn -- \"$source_path\" \"$dest\""
+      run ln -sfn -- "$source_path" "$dest"
       return 0
     else
       local bak; bak="$(backup_path "$dest")"
       log "ℹ️  Symlink diferente encontrado. Movendo para: $bak"
-      run "mv -- \"$dest\" \"$bak\""
+      run mv -- "$dest" "$bak"
     fi
   elif [ -e "$dest" ]; then
     local bak; bak="$(backup_path "$dest")"
     log "ℹ️  Existe em $dest. Movendo para backup: $bak"
-    run "mv -- \"$dest\" \"$bak\""
+    run mv -- "$dest" "$bak"
   fi
 
   vlog "→ ln -s \"$source_path\" \"$dest\""
-  run "ln -s -- \"$source_path\" \"$dest\""
+  run ln -s -- "$source_path" "$dest"
 }
 
 # -------------------- PARÂMETROS --------------------
@@ -171,14 +184,12 @@ $HOME/.config/hypr|config/hypr
 $HOME/.config/kitty|config/kitty
 $HOME/.config/nwg-bar|config/nwg-bar
 $HOME/.config/systemd-copia/user/default.target.wants/bluetooth-autoconnect.service|config/systemd/user/bluetooth-autoconnect.service
-$HOME/.config/scripts|config/scripts
 $HOME/.config/avatar.png|config/assets-dotfiles/avatar.png
 $HOME/.config/waybar|config/waybar
 $HOME/.config/kdeglobals|config/kdeglobals
 $HOME/.config/galendae|config/galendae
 $HOME/.config/nvim|config/nvim
 $HOME/.config/systemd/user|config/systemd/user
-$HOME/.local/share/Trash/files/cliphist.service|config/systemd/user/cliphist.service
 $HOME/.local/bin/screenshot.sh|config/grim/screenshot.sh
 $HOME/.local/bin/whatsapp-web-chromium|local/bin/whatsapp-web-chromium
 $HOME/.local/share/applications/whatsapp-web.desktop|local/share/applications/whatsapp-web.desktop
@@ -194,5 +205,11 @@ while IFS= read -r line; do
   IFS='|' read -r dest src <<<"$line"
   link_one "$dest" "$src"
 done <<< "$MAP"
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  log "[dry-run] $BASE_DIR/install/setup-git-hooks.sh"
+else
+  "$BASE_DIR/install/setup-git-hooks.sh"
+fi
 
 log "✓ Finalizado."
