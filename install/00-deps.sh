@@ -21,6 +21,7 @@ PACMAN_PACKAGES=(
   bluez-utils       # bluetoothctl
   copyq
   fastfetch
+  ffmpeg             # gera o quadro preto da camera virtual do WhatsApp
   gawk              # awk
   grim
   hyprland
@@ -46,6 +47,8 @@ PACMAN_PACKAGES=(
   zsh
   papirus-icon-theme      # opcional: ícones Papirus
   ttf-jetbrains-mono-nerd # opcional: Nerd Font
+  v4l-utils          # diagnostico de dispositivos V4L2
+  v4l2loopback-dkms  # camera virtual para chamadas do WhatsApp
 )
 
 AUR_PACKAGES=(

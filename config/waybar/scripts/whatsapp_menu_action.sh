@@ -47,6 +47,9 @@ case "${1:-}" in
 			selector="$(hypr_address_selector "$address")"
 			hypr_dispatch "hl.dsp.window.close({ window = $selector })" >/dev/null || true
 		fi
+		if command -v systemctl >/dev/null 2>&1; then
+			systemctl --user stop whatsapp-virtual-camera.service >/dev/null 2>&1 || true
+		fi
 		;;
 	*)
 		exit 2

@@ -57,6 +57,33 @@ case "${WHATSAPP_START_HIDDEN:-0}" in
 		;;
 esac
 
+start_virtual_camera() {
+	service="whatsapp-virtual-camera.service"
+
+	command -v systemctl >/dev/null 2>&1 || return 0
+	systemctl --user cat "$service" >/dev/null 2>&1 || return 0
+
+	if ! systemctl --user start "$service" >/dev/null 2>&1; then
+		printf 'Aviso: nao foi possivel iniciar a camera virtual do WhatsApp.\n' >&2
+		return 0
+	fi
+	command -v v4l2-ctl >/dev/null 2>&1 || return 0
+
+	# exclusive_caps so anuncia captura depois que o produtor abre o dispositivo.
+	attempt=0
+	while [ "$attempt" -lt 30 ]; do
+		if [ -c /dev/video20 ] && LC_ALL=C v4l2-ctl -D -d /dev/video20 2>/dev/null | grep -Fq 'Video Capture'; then
+			return 0
+		fi
+		sleep 0.1
+		attempt=$((attempt + 1))
+	done
+
+	printf 'Aviso: a camera virtual nao ficou pronta a tempo.\n' >&2
+}
+
+start_virtual_camera
+
 runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 socket="${runtime_dir}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket.sock"
 hypr_helper="$HOME/.config/hypr/scripts/lib/hyprland-ipc.sh"

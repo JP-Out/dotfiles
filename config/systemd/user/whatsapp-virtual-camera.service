@@ -1,0 +1,14 @@
+[Unit]
+Description=Camera virtual preta para chamadas do WhatsApp
+Documentation=man:v4l2loopback(1)
+ConditionPathExists=/dev/video20
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ffmpeg -hide_banner -nostdin -loglevel warning -re -f lavfi -i color=c=black:s=1280x720:r=15 -pix_fmt yuv420p -f v4l2 /dev/video20
+Restart=on-failure
+RestartSec=2
+Nice=10
+
+[Install]
+WantedBy=default.target
