@@ -14,6 +14,9 @@
   const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
   const LOG_EXTERNAL_LINK = "wwdt:log-external-link";
   const SEND_SYSTEM_NOTIFICATION = "wwdt:send-system-notification";
+  const DOWNLOAD_COMPLETED = "wwdt:download-completed";
+  const SHOW_DOWNLOAD = "wwdt:show-download";
+  const DOWNLOAD_TOAST_ID = "wwdt-download-toast-container";
   const EXTERNAL_LINK_REQUEST_EVENT = "wwdt:external-link-request";
   const EXTERNAL_LINK_LOG_EVENT = "wwdt:external-link-log";
   const EXTERNAL_LINK_BRIDGE_ATTR = "data-wwdt-external-link-bridge";
@@ -64,6 +67,8 @@
   let lastSystemNotificationAt = 0;
   const handledSystemNotificationEvents = new WeakSet();
   let sidebarTarget = null;
+  const downloadToastQueue = [];
+  let downloadToastVisible = false;
 
   const collapsedIcon = `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="wwdt-nav-icon">
@@ -90,6 +95,65 @@
       <rect x="8.25" y="7.25" width="9.5" height="12.5" rx="1.6" stroke="currentColor" stroke-width="1.7"/>
       <path d="M5.75 16.25H5.5C4.67 16.25 4 15.58 4 14.75V5.5C4 4.67 4.67 4 5.5 4H13.25C14.08 4 14.75 4.67 14.75 5.5V5.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
     </svg>`;
+
+  const toastSuccessIcon = `
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path fill="currentColor" d="m10.6 13.8-2.15-2.15a.95.95 0 0 0-.7-.28.95.95 0 0 0-.97.97c0 .3.09.53.27.71L9.9 15.9a.96.96 0 0 0 1.4 0l5.65-5.65a.95.95 0 0 0 .28-.7.95.95 0 0 0-.98-.98c-.28 0-.52.1-.7.28L10.6 13.8ZM12 22a10.1 10.1 0 0 1-9.21-6.1A9.74 9.74 0 0 1 2 12a10.1 10.1 0 0 1 6.1-9.21A9.74 9.74 0 0 1 12 2a10.1 10.1 0 0 1 9.21 6.1c.53 1.22.79 2.52.79 3.9s-.26 2.68-.79 3.9a10.1 10.1 0 0 1-5.31 5.31A9.74 9.74 0 0 1 12 22Zm0-2c2.23 0 4.13-.77 5.68-2.32A7.72 7.72 0 0 0 20 12a7.7 7.7 0 0 0-2.32-5.67A7.72 7.72 0 0 0 12 4a7.7 7.7 0 0 0-5.67 2.33A7.72 7.72 0 0 0 4 12c0 2.23.78 4.13 2.33 5.68A7.72 7.72 0 0 0 12 20Z"/>
+    </svg>`;
+
+  function showNextDownloadToast() {
+    if (downloadToastVisible || downloadToastQueue.length === 0) return;
+    downloadToastVisible = true;
+    const download = downloadToastQueue.shift();
+
+    const container = document.createElement("div");
+    container.id = DOWNLOAD_TOAST_ID;
+    container.setAttribute("aria-live", "polite");
+
+    const toast = document.createElement("div");
+    toast.className = "wwdt-download-toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-atomic", "true");
+    toast.title = download.filename;
+    toast.innerHTML = `
+      <span class="wwdt-download-toast-icon">${toastSuccessIcon}</span>
+      <span class="wwdt-download-toast-content">
+        <span class="wwdt-download-toast-message">Download concluído</span>
+        <button type="button" class="wwdt-download-toast-action">Mostrar na pasta</button>
+      </span>`;
+
+    let closed = false;
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      toast.classList.add("wwdt-download-toast-leaving");
+      toast.addEventListener("animationend", () => {
+        container.remove();
+        downloadToastVisible = false;
+        showNextDownloadToast();
+      }, { once: true });
+    };
+
+    toast.querySelector(".wwdt-download-toast-action").addEventListener("click", () => {
+      chrome.runtime.sendMessage({ type: SHOW_DOWNLOAD, downloadId: download.downloadId }, (response) => {
+        const error = chrome.runtime.lastError?.message;
+        if (error || !response?.ok) {
+          console.warn("WWDT: failed to reveal completed download", error || response?.error || "unknown error");
+        }
+      });
+      close();
+    });
+
+    container.appendChild(toast);
+    document.body.appendChild(container);
+    window.setTimeout(close, 5000);
+  }
+
+  function queueDownloadToast(download) {
+    if (!Number.isInteger(download.downloadId)) return;
+    downloadToastQueue.push(download);
+    showNextDownloadToast();
+  }
 
   function chromeStorageGet(key) {
     return new Promise((resolve) => {
@@ -919,6 +983,14 @@
       refreshUnreadNotificationState();
     });
   }
+
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message?.type !== DOWNLOAD_COMPLETED) return;
+    queueDownloadToast({
+      downloadId: message.downloadId,
+      filename: typeof message.filename === "string" ? message.filename : "arquivo"
+    });
+  });
 
   if (!devtoolsMode) {
     document.addEventListener("keydown", blockChromiumShortcut, true);

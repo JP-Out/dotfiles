@@ -3,6 +3,33 @@ const OPEN_EXTERNAL_LINK = "wwdt:open-external-link";
 const PING_EXTERNAL_LINK_HOST = "wwdt:ping-external-link-host";
 const LOG_EXTERNAL_LINK = "wwdt:log-external-link";
 const SEND_SYSTEM_NOTIFICATION = "wwdt:send-system-notification";
+const DOWNLOAD_COMPLETED = "wwdt:download-completed";
+const SHOW_DOWNLOAD = "wwdt:show-download";
+
+function sendToWhatsAppTabs(message) {
+  chrome.tabs.query({ url: "https://web.whatsapp.com/*" }, (tabs) => {
+    if (chrome.runtime.lastError) return;
+    for (const tab of tabs) {
+      if (!Number.isInteger(tab.id)) continue;
+      chrome.tabs.sendMessage(tab.id, message, () => void chrome.runtime.lastError);
+    }
+  });
+}
+
+chrome.downloads.onChanged.addListener((delta) => {
+  if (delta.state?.current !== "complete") return;
+
+  chrome.downloads.search({ id: delta.id }, (items) => {
+    if (chrome.runtime.lastError || items.length !== 1) return;
+    const item = items[0];
+    const filename = item.filename.split(/[\\/]/).pop() || "arquivo";
+    sendToWhatsAppTabs({
+      type: DOWNLOAD_COMPLETED,
+      downloadId: item.id,
+      filename
+    });
+  });
+});
 
 function isExternalHttpUrl(value) {
   try {
@@ -70,6 +97,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         bodyLength: typeof notification.body === "string" ? notification.body.length : 0,
         response
       });
+    });
+    return true;
+  }
+
+  if (message.type === SHOW_DOWNLOAD && Number.isInteger(message.downloadId)) {
+    chrome.downloads.show(message.downloadId, (shown) => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+        return;
+      }
+      sendResponse({ ok: shown !== false });
     });
     return true;
   }

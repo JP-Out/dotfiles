@@ -325,3 +325,122 @@ body:has(#side.wwdt-chat-pane-collapsed) div:has(> #side.wwdt-chat-pane-collapse
   color: #e9edef;
   flex: 0 0 auto;
 }
+
+#wwdt-download-toast-container {
+  position: fixed;
+  right: 64px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 2147483647;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.wwdt-download-toast {
+  box-sizing: border-box;
+  min-height: 52px;
+  max-width: min(680px, calc(100vw - 96px));
+  display: flex;
+  align-items: center;
+  padding: 4px 8px 4px 16px;
+  color: #0a0a0a;
+  background: #eeeeee;
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+  font-family: "Roboto Variable", Roboto, "Helvetica Neue", Helvetica, sans-serif;
+  pointer-events: auto;
+  animation: wwdt-toast-enter 650ms cubic-bezier(0.71, 0.14, 0.09, 0.94);
+}
+
+.wwdt-download-toast-icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.wwdt-download-toast-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.wwdt-download-toast-content {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.wwdt-download-toast-message {
+  min-width: 0;
+  padding: 6px;
+  overflow: hidden;
+  color: #0a0a0a;
+  font-size: 14px;
+  font-weight: 545;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wwdt-download-toast-action {
+  min-height: 32px;
+  margin: 6px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  background: rgba(10, 10, 10, 0.6);
+  font: 545 14px/20px "Roboto Variable", Roboto, "Helvetica Neue", Helvetica, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.wwdt-download-toast-action:hover {
+  background: rgba(10, 10, 10, 0.66);
+}
+
+.wwdt-download-toast-action:focus-visible {
+  outline: 2px solid #0a0a0a;
+  outline-offset: 2px;
+}
+
+.wwdt-download-toast-leaving {
+  animation: wwdt-toast-leave 250ms ease-in forwards;
+}
+
+@keyframes wwdt-toast-enter {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    max-height: 1000px;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes wwdt-toast-leave {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wwdt-download-toast,
+  .wwdt-download-toast-leaving {
+    animation-duration: 1ms;
+  }
+}
