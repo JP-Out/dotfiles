@@ -198,6 +198,37 @@ cleanup_extension_runtime_cache() {
 	rm -rf "${default_dir}/Extension Scripts" "${default_dir}/Service Worker/ScriptCache"
 }
 
+configure_download_preferences() {
+	default_dir="${profile_dir}/Default"
+	preferences_file="${default_dir}/Preferences"
+	tmp_file="${preferences_file}.wwdt.$$"
+
+	command -v jq >/dev/null 2>&1 || return 0
+	mkdir -p "$default_dir"
+
+	if [ -f "$preferences_file" ]; then
+		if ! jq '
+			.download.prompt_for_download = true
+			| .download_bubble.partial_view_enabled = false
+		' "$preferences_file" > "$tmp_file"; then
+			rm -f "$tmp_file"
+			printf 'Aviso: nao foi possivel configurar as preferencias de download.\n' >&2
+			return 0
+		fi
+		chmod --reference="$preferences_file" "$tmp_file"
+	else
+		if ! jq -n '
+			.download.prompt_for_download = true
+			| .download_bubble.partial_view_enabled = false
+		' > "$tmp_file"; then
+			rm -f "$tmp_file"
+			return 0
+		fi
+	fi
+
+	mv "$tmp_file" "$preferences_file"
+}
+
 launch_chromium() {
 	if command -v setsid >/dev/null 2>&1; then
 		setsid -f /usr/bin/chromium \
@@ -209,6 +240,8 @@ launch_chromium() {
 			--disable-sync \
 			--disable-default-apps \
 			--disable-background-mode \
+			--disk-cache-size=268435456 \
+			--media-cache-size=67108864 \
 			${extension_args} \
 			${chromium_extra_args} \
 			--disable-features=Translate,OptimizationGuideModelDownloading,MediaRouter >/dev/null 2>&1
@@ -222,6 +255,8 @@ launch_chromium() {
 			--disable-sync \
 			--disable-default-apps \
 			--disable-background-mode \
+			--disk-cache-size=268435456 \
+			--media-cache-size=67108864 \
 			${extension_args} \
 			${chromium_extra_args} \
 			--disable-features=Translate,OptimizationGuideModelDownloading,MediaRouter >/dev/null 2>&1 &
@@ -297,6 +332,7 @@ elif command -v hyprctl >/dev/null 2>&1 && is_hyprland; then
 fi
 
 install_native_messaging_host
+configure_download_preferences
 cleanup_legacy_extension_state
 cleanup_extension_runtime_cache
 launch_chromium
