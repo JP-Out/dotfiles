@@ -124,6 +124,38 @@ def send_system_notification(notification):
     return {"ok": True}
 
 
+def reveal_file(path):
+    if not isinstance(path, str) or not os.path.isabs(path):
+        log_event("native-reveal-invalid", error="Path is not absolute")
+        return {"ok": False, "error": "Invalid file path"}
+
+    normalized_path = os.path.realpath(path)
+    if not os.path.isfile(normalized_path):
+        log_event("native-reveal-invalid", error="File does not exist")
+        return {"ok": False, "error": "Downloaded file does not exist"}
+
+    dolphin = shutil.which("dolphin")
+    if dolphin:
+        command = [dolphin, "--select", normalized_path]
+    else:
+        opener = shutil.which("xdg-open")
+        if not opener:
+            log_event("native-reveal-failed", error="No file manager found")
+            return {"ok": False, "error": "No file manager found"}
+        command = [opener, os.path.dirname(normalized_path)]
+
+    process = subprocess.Popen(
+        command,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        close_fds=True,
+    )
+    log_event("native-reveal-spawned", file_manager=command[0], pid=process.pid)
+    return {"ok": True}
+
+
 def read_native_message():
     raw_length = sys.stdin.buffer.read(4)
     if len(raw_length) != 4:
@@ -179,12 +211,20 @@ def handle_message(message):
     if "notification" in message:
         return send_system_notification(message.get("notification"))
 
+    if "reveal_file" in message:
+        return reveal_file(message.get("reveal_file"))
+
     return handle_url(message.get("url"))
 
 
 def main():
     if len(sys.argv) == 3 and sys.argv[1] == "--url":
         payload = handle_url(sys.argv[2])
+        print(json.dumps(payload))
+        return 0 if payload.get("ok") else 1
+
+    if len(sys.argv) == 3 and sys.argv[1] == "--reveal-file":
+        payload = reveal_file(sys.argv[2])
         print(json.dumps(payload))
         return 0 if payload.get("ok") else 1
 

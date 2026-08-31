@@ -102,12 +102,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message.type === SHOW_DOWNLOAD && Number.isInteger(message.downloadId)) {
-    chrome.downloads.show(message.downloadId, (shown) => {
-      if (chrome.runtime.lastError) {
-        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+    chrome.downloads.search({ id: message.downloadId }, (items) => {
+      if (chrome.runtime.lastError || items.length !== 1) {
+        sendResponse({ ok: false, error: chrome.runtime.lastError?.message || "Download not found" });
         return;
       }
-      sendResponse({ ok: shown !== false });
+
+      sendNativeMessage({ reveal_file: items[0].filename }, sendResponse);
     });
     return true;
   }
