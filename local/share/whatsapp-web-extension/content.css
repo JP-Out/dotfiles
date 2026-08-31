@@ -338,6 +338,7 @@ body:has(#side.wwdt-chat-pane-collapsed) div:has(> #side.wwdt-chat-pane-collapse
 
 .wwdt-download-toast {
   box-sizing: border-box;
+  width: max-content;
   min-height: 52px;
   max-width: min(680px, calc(100vw - 96px));
   display: flex;
